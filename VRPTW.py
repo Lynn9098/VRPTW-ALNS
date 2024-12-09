@@ -3,7 +3,7 @@ import random
 import math
 import time
 
-from 代码文件.VRPTW.VRPTW import vrptw
+#from 代码文件.VRPTW.VRPTW import vrptw
 
 
 class Customer:
@@ -60,11 +60,26 @@ class VRPTW_LNS:
             capacity = self.vehicle_capacity
             current_time = 0
             route = [0]  # Start from depot
+            route_time=0
             while unvisited:  # 一次循环安排一个客户
                 next_customer = None
                 best_cost = float('inf')
+                customer_judge=float('inf')
+                current_judge=float('inf')
+                pre_time=0
                 for customer_id in unvisited:
                     #print(customer_id)
+                    customer = self.customers[customer_id - 1]
+                    pre_time=current_time + self.distance_matrix[route[-1]][customer_id]
+                    if pre_time>customer.due_time:
+                        continue
+                    if customer.demand > capacity:
+                        continue
+                    current_judge=max(0, customer.ready_time-pre_time)+self.distance_matrix[route[-1]][customer_id]
+                    if current_judge<customer_judge:
+                        customer_judge=current_judge
+                        next_customer=customer_id
+                '''''
                     customer = self.customers[customer_id - 1]
                     if customer.demand > capacity:
                         continue
@@ -73,7 +88,7 @@ class VRPTW_LNS:
                         cost = self.distance_matrix[route[-1]][customer_id]
                         if cost < best_cost:
                             best_cost = cost
-                            next_customer = customer_id
+                            next_customer = customer_id'''
                 if next_customer is None:
                     break
                 route.append(next_customer)
@@ -85,6 +100,7 @@ class VRPTW_LNS:
             route.append(0)  # Return to depot
             if len(route) > 2:
                 routes.append(Route(vehicle_id, route, self.calculate_route_distance(route),self.vehicle_capacity-capacity))
+        #print(routes)
         return routes
 
     def calculate_route_distance(self, route):
@@ -304,7 +320,7 @@ class VRPTW_LNS:
         p_rep_reg = w_rep[2] / sum(w_rep)
         a = 0.97
         j = 0
-        per=0.05
+        per=0.02
         #per=random.uniform(0.1,0.3)
         current_solution = self.initialize_solution()
         current_cost = sum(route.distance for route in current_solution)
@@ -445,17 +461,17 @@ for i in range(num, len(data)):
 
 #破坏随机
 results=[]
-for retimes in range(2):
+for retimes in range(1):
 # Retry execution with corrected implementation
     start = time.time()
     vrptw = VRPTW_LNS(depot, customers, vehicle_capacity, max_vehicles)
-    vrptw.search(iterations=10)
+    vrptw.search(iterations=20)
     end = time.time()
     print ('运行时间：'+str(end-start)+'秒')
     result=[vrptw.best_cost - 2000* len(vrptw.best_solution)\
                                     -sum(vrptw.calculate_viotime(customers,cus.customers) for cus in vrptw.best_solution), len(vrptw.best_solution)]
     results.append(result)
-print(results)
+#print(results)
 #print(max(results[:][1]))
 '''
 xx=vrptw.initialize_solution()
@@ -476,7 +492,7 @@ for route in vrptw.best_solution:
         if arrival_time>customers[cu-1].due_time:
             print('客户'+str(cu)+'到达时间为：'+str(arrival_time)+' due为：'+str(customers[cu-1].due_time)+' 未达成要求')
         c=cu
-    if ca>200:
+    if ca>vehicle_capacity:
         print('车辆' + str(route.vehicle_id) + '不合理')
 
 '''
