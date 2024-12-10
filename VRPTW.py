@@ -2,9 +2,8 @@ import numpy as np
 import random
 import math
 import time
-
-#from 代码文件.VRPTW.VRPTW import vrptw
-
+import os
+import pandas as pd
 
 class Customer:
     def __init__(self, idx, demand, ready_time, due_time, service_time, x, y):
@@ -79,16 +78,6 @@ class VRPTW_LNS:
                     if current_judge<customer_judge:
                         customer_judge=current_judge
                         next_customer=customer_id
-                '''''
-                    customer = self.customers[customer_id - 1]
-                    if customer.demand > capacity:
-                        continue
-                    arrival_time = max(current_time + self.distance_matrix[route[-1]][customer_id], customer.ready_time)
-                    if arrival_time <= customer.due_time:
-                        cost = self.distance_matrix[route[-1]][customer_id]
-                        if cost < best_cost:
-                            best_cost = cost
-                            next_customer = customer_id'''
                 if next_customer is None:
                     break
                 route.append(next_customer)
@@ -128,7 +117,7 @@ class VRPTW_LNS:
         return vio_time
 
     def destroy_random(self, solution, percentage=0.1):  # 随机挑选破坏
-        num_customers_to_remove = int(len(self.customers) * percentage)
+        num_customers_to_remove = max(int(len(self.customers) * percentage),2)
         # num_customers_to_remove = random.randint(1, num_customers_to_remove)
         removed_customers = random.sample([c for route in solution for c in route.customers if c != 0],
                                           num_customers_to_remove)
@@ -142,7 +131,7 @@ class VRPTW_LNS:
         return remaining_routes, removed_customers
 
     def destroy_greedy(self, solution, percentage=0.1):  # 贪心破坏
-        num_customers_to_remove = int(len(self.customers) * percentage)
+        num_customers_to_remove = max(int(len(self.customers) * percentage),2)
         # num_customers_to_remove = random.randint(1, num_customers_to_remove)
         removed_customers = []
         best_position = []
@@ -184,7 +173,7 @@ class VRPTW_LNS:
         return a
 
     def destroy_shaw(self, solution, customers, percentage=0.1):
-        num_customers_to_remove = int(len(self.customers) * percentage)
+        num_customers_to_remove = max(int(len(self.customers) * percentage),2)
         destroy = random.randint(1, len(customers))
         removed_customers = []
         remaining_customers = [c for c in range(1, len(customers) + 1)]
@@ -320,7 +309,7 @@ class VRPTW_LNS:
         p_rep_reg = w_rep[2] / sum(w_rep)
         a = 0.97
         j = 0
-        per=0.02
+        per=0.03
         #per=random.uniform(0.1,0.3)
         current_solution = self.initialize_solution()
         current_cost = sum(route.distance for route in current_solution)
@@ -329,7 +318,8 @@ class VRPTW_LNS:
         history_cost = []
         self.best_solution = current_solution
         self.best_cost = current_cost
-        print(f"Iteration {0}, Best Cost: {self.best_cost}")
+        print(f"Iteration {0}, Best Cost: {self.best_cost- C * len(self.best_solution)\
+                                -sum(self.calculate_viotime(customers,cus.customers) for cus in self.best_solution)}")
         for iteration in range(iterations):
             # print(iteration+1)
             T = 100
@@ -388,7 +378,8 @@ class VRPTW_LNS:
                     continue
                     # des_use[use]-=1
                     # rep_use[use_r]-=1
-                elif new_cost < self.best_cost:
+                elif new_cost-sum(self.calculate_viotime(customers,cus.customers) for cus in partial_solution) <\
+                        self.best_cost-sum(self.calculate_viotime(customers,cus.customers) for cus in self.best_solution):
                 #if new_cost < self.best_cost and self.accept(self.customers, partial_solution, vehicle_capacity) == True:
                     current_solution = partial_solution
                     current_cost = new_cost
@@ -427,55 +418,71 @@ class VRPTW_LNS:
         print(f'使用repair_greedy : {rep_use[1]}次')
         print(f'使用repair_regret : {rep_use[2]}次')
 
+
+
 #读取文件数据
-file_path = r'D:\Python\代码文件\VRPTW\solomon-VRPTW\solomon-100\c101.txt'
-with open(file_path, 'r') as file:
-    data0 = file.read()
-data = []
-for line in data0.strip().split('\n'):
-    data.append(line.split())
-while [] in data:
-    data.remove([])
-
-max_vehicles, vehicle_capacity = data[data.index(['NUMBER', 'CAPACITY'])+1]
-max_vehicles=int(max_vehicles)
-vehicle_capacity=int(vehicle_capacity)
-print('vehicle_capacity:', vehicle_capacity)
-
-num=data.index(['CUSTOMER'])+2
-customers=[]
-for i in range(num, len(data)):
-    cur=data[i]
-    idx=int(cur[0])
-    demand=int(cur[3])
-    ready_time=int(cur[4])
-    due_time=int(cur[5])
-    service_time=int(cur[6])
-    x=int(cur[1])
-    y=int(cur[2])
-    if i == num:
-        depot = Customer(idx, demand, ready_time, due_time, service_time, x, y)
-    else :
-        customers.append(Customer(idx, demand, ready_time, due_time, service_time, x, y))
-
-
-#破坏随机
 results=[]
-for retimes in range(1):
-# Retry execution with corrected implementation
+filePath = r'D:\Python\VRPTW-ALNS\solomon-100'
+instances_vrptw=os.listdir(filePath)
+for instance_name in instances_vrptw:
     start = time.time()
+    file_path = r'D:\Python\VRPTW-ALNS\solomon-100'+'\\'+ instance_name
+    with open(file_path, 'r') as file:
+        data0 = file.read()
+    data = []
+    for line in data0.strip().split('\n'):
+        data.append(line.split())
+    while [] in data:
+        data.remove([])
+
+    best_vehicles = int(data[0][1])
+    best_cost=float([0][2])
+    max_vehicles, vehicle_capacity = data[data.index(['NUMBER', 'CAPACITY'])+1]
+    max_vehicles=int(max_vehicles)
+    vehicle_capacity=int(vehicle_capacity)
+    print('vehicle_capacity:', vehicle_capacity)
+
+    num=data.index(['CUSTOMER'])+2
+    customers=[]
+    for i in range(num, len(data)):
+        cur=data[i]
+        idx=int(cur[0])
+        demand=int(cur[3])
+        ready_time=int(cur[4])
+        due_time=int(cur[5])
+        service_time=int(cur[6])
+        x=int(cur[1])
+        y=int(cur[2])
+        if i == num:
+            depot = Customer(idx, demand, ready_time, due_time, service_time, x, y)
+        else :
+            customers.append(Customer(idx, demand, ready_time, due_time, service_time, x, y))
+
+    #to do list
+    #Worst Case Removal算子
+    #不同案例的批量运行
+
+    result_one=[]   #算例、成本、车辆、运算时间、具体路线
     vrptw = VRPTW_LNS(depot, customers, vehicle_capacity, max_vehicles)
-    vrptw.search(iterations=20)
+    vrptw.search(iterations=400)
     end = time.time()
-    print ('运行时间：'+str(end-start)+'秒')
-    result=[vrptw.best_cost - 2000* len(vrptw.best_solution)\
-                                    -sum(vrptw.calculate_viotime(customers,cus.customers) for cus in vrptw.best_solution), len(vrptw.best_solution)]
+    use_time=round(float(end-start),2)
+    #print ('运行时间：'+str(end-start)+'秒')
+    result=[instance_name, vrptw.best_cost-2000*len(vrptw.best_solution)\
+                            -sum(vrptw.calculate_viotime(customers,cus.customers) for cus in vrptw.best_solution),\
+                            best_cost, len(vrptw.best_solution), best_vehicles, use_time, vrptw.best_solution]
     results.append(result)
+# list转dataframe
+df = pd.DataFrame(results, columns=['算例','成本','最佳成本', '车辆数', '最佳车辆数', '运算时间', '具体路线'])
+# 保存到本地excel
+save_path=r'D:/Python/VRPTW-ALNS/算例结果.xlsx'
+df.to_excel(save_path, index=False)
+
 #print(results)
 #print(max(results[:][1]))
 '''
 xx=vrptw.initialize_solution()
-print(xx)'''
+print(xx)
 print(vrptw.best_solution)
 print(len(vrptw.best_solution))
 for route in vrptw.best_solution:
@@ -493,9 +500,4 @@ for route in vrptw.best_solution:
             print('客户'+str(cu)+'到达时间为：'+str(arrival_time)+' due为：'+str(customers[cu-1].due_time)+' 未达成要求')
         c=cu
     if ca>vehicle_capacity:
-        print('车辆' + str(route.vehicle_id) + '不合理')
-
-'''
-tt=[1,2,3,4,5]
-random.shuffle(tt)
-print(tt)'''
+        print('车辆' + str(route.vehicle_id) + '不合理')'''
