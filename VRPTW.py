@@ -293,7 +293,7 @@ class VRPTW_LNS:
         for i in range(len(partial_solution)):
             partial_solution[i].vehicle_id = i + 1
 
-    def search(self, iterations=500):
+    def search(self, initialize_solution, iterations=500):
         des_score = [0, 0, 0]  # [random. greedy, shaw]
         des_use = [0, 0, 0]
         rep_score = [0, 0, 0]
@@ -309,9 +309,9 @@ class VRPTW_LNS:
         p_rep_reg = w_rep[2] / sum(w_rep)
         a = 0.97
         j = 0
-        per=0.03
+        per=0.02
         #per=random.uniform(0.1,0.3)
-        current_solution = self.initialize_solution()
+        current_solution = initialize_solution
         current_cost = sum(route.distance for route in current_solution)
         C =2000# current_cost
         current_cost = C * len(current_solution) + current_cost+sum(self.calculate_viotime(customers,cus.customers) for cus in current_solution)
@@ -421,6 +421,7 @@ class VRPTW_LNS:
 
 
 #读取文件数据
+random.seed(12138)
 results=[]
 filePath = r'D:\Python\VRPTW-ALNS\solomon-100'
 instances_vrptw=os.listdir(filePath)
@@ -436,7 +437,7 @@ for instance_name in instances_vrptw:
         data.remove([])
 
     best_vehicles = int(data[0][1])
-    best_cost=float([0][2])
+    best_cost=float(data[0][2])
     max_vehicles, vehicle_capacity = data[data.index(['NUMBER', 'CAPACITY'])+1]
     max_vehicles=int(max_vehicles)
     vehicle_capacity=int(vehicle_capacity)
@@ -462,18 +463,24 @@ for instance_name in instances_vrptw:
     #Worst Case Removal算子
     #不同案例的批量运行
 
-    result_one=[]   #算例、成本、车辆、运算时间、具体路线
+    result_one=[]   #算例、客户数、成本、车辆、运算时间、具体路线
+    best_cost_all=float('inf')
     vrptw = VRPTW_LNS(depot, customers, vehicle_capacity, max_vehicles)
-    vrptw.search(iterations=400)
+    initialize_solution=vrptw.initialize_solution()
+    for segment in range(4):
+        vrptw.search(initialize_solution, iterations=50)
+        best_cost_current=vrptw.best_cost-2000*len(vrptw.best_solution)-sum(vrptw.calculate_viotime(customers,cus.customers) for cus in vrptw.best_solution)
+        if best_cost_current<best_cost_all:
+            best_cost_all=best_cost_current
+            result = [instance_name, len(customers), best_cost_all,
+                      float(best_cost), len(vrptw.best_solution), int(best_vehicles), 0, vrptw.best_solution]
     end = time.time()
     use_time=round(float(end-start),2)
     #print ('运行时间：'+str(end-start)+'秒')
-    result=[instance_name, vrptw.best_cost-2000*len(vrptw.best_solution)\
-                            -sum(vrptw.calculate_viotime(customers,cus.customers) for cus in vrptw.best_solution),\
-                            best_cost, len(vrptw.best_solution), best_vehicles, use_time, vrptw.best_solution]
+    result[6]=use_time
     results.append(result)
 # list转dataframe
-df = pd.DataFrame(results, columns=['算例','成本','最佳成本', '车辆数', '最佳车辆数', '运算时间', '具体路线'])
+df = pd.DataFrame(results, columns=['算例','客户数','成本','最佳成本', '车辆数', '最佳车辆数', '运算时间', '具体路线'])
 # 保存到本地excel
 save_path=r'D:/Python/VRPTW-ALNS/算例结果.xlsx'
 df.to_excel(save_path, index=False)
