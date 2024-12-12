@@ -215,23 +215,28 @@ class VRPTW_LNS:
             partial_solution[insert_route].customers.insert(random.randint(1, x - 1), customer_id)
             partial_solution[insert_route].distance = self.calculate_route_distance(partial_solution[insert_route].customers)
 
-    def repair_greed(self, partial_solution, removed_customers):  # 贪心修补
+    def repair_greed(self, partial_solution, removed_customers, par=1):  # 贪心修补
         for customer_id in removed_customers:
             best_route = None
             best_position = None
+            increases = []
+            increases_route = []
             best_increase = float('inf')
             for route in partial_solution:
                 for i in range(1, len(route.customers)):
                     new_route = route.customers[:i] + [customer_id] + route.customers[i:]
                     new_distance = self.calculate_route_distance(new_route)
                     increase = new_distance - route.distance
-                    if increase < best_increase:
-                        best_increase = increase
-                        best_route = route
-                        best_position = i
+                    increases.append(increase)
+                    increases_route.append([route, i, customer_id])
+            increase_sort = increases
+            increase_sort.sort(reverse=True)
+            r = random.random()
+            idx_increase = math.floor(pow(r, par) * len(increase_sort))
+            best_route, best_position, insert_id = increases_route[increases.index(increase_sort[idx_increase])]
             if best_route:
-                best_route.customers.insert(best_position, customer_id)
-                best_route.distance += best_increase
+                best_route.customers.insert(best_position, insert_id)
+                best_route.distance += increase_sort[idx_increase]
 
     def repair_regret(self, partial_solution, removed_customers):
         while removed_customers != []:
@@ -303,6 +308,38 @@ class VRPTW_LNS:
         for i in range(len(partial_solution)):
             partial_solution[i].vehicle_id = i + 1
 
+    def check_feasibility(self, best_solution, customers):
+        error_route=[]
+        error_cus = []
+        have_customers = []#检查是否有重复客户
+        for route in best_solution:
+            ar_time = 0
+            c = 0
+            ca = 0
+            for cu in route.customers:
+                if cu == 0:
+                    continue
+                have_customers.append(cu)
+                ca += customers[cu - 1].demand
+                arrival_time = max(ar_time + vrptw.distance_matrix[c][cu], customers[cu - 1].ready_time)
+                # if arrival_time<=customers[cu-1].due_time:
+                #    print('客户'+str(cu)+'到达时间为：'+str(arrival_time)+' due为：'+str(customers[cu-1].due_time)+' 达成要求')
+                if arrival_time > customers[cu - 1].due_time:
+                    print('客户' + str(cu) + '到达时间为：' + str(arrival_time) + ' due为：' + str(
+                        customers[cu - 1].due_time) + ' 未达成要求')
+                    error_cus.append([route.vehicle_id,cu,'时间不合理'])
+                c = cu
+            if ca > vehicle_capacity:
+                print('车辆' + str(route.vehicle_id) + '不合理')
+                error_route.append([route,'容量不合理'])
+        for cus in customers:
+            if cus.idx not in have_customers:
+                error_cus.append([id,'缺少该客户'])
+        return error_route, error_cus
+
+
+
+
     def search(self, initialize_solution, iterations=500):
         des_score = [0, 0, 0]  # [random. greedy, shaw]
         des_use = [0, 0, 0]
@@ -368,7 +405,7 @@ class VRPTW_LNS:
                     use_r = 0
                     rep_use[use_r] += 1
                 elif ran < p_rep_gre + p_rep_ran:
-                    self.repair_greed(partial_solution, removed_customers)
+                    self.repair_greed(partial_solution, removed_customers,par=2)
                     use_r = 1
                     rep_use[use_r] += 1
                 else:
@@ -435,6 +472,7 @@ random.seed(12138)
 results=[]
 filePath = r'D:\Python\VRPTW-ALNS\solomon-100'
 instances_vrptw=os.listdir(filePath)
+#instances_vrptw=['rc103.txt','rc104.txt']
 for instance_name in instances_vrptw:
     start = time.time()
     file_path = r'D:\Python\VRPTW-ALNS\solomon-100'+'\\'+ instance_name
@@ -478,43 +516,46 @@ for instance_name in instances_vrptw:
     vrptw = VRPTW_LNS(depot, customers, vehicle_capacity, max_vehicles)
     initialize_solution=vrptw.initialize_solution()
     for segment in range(4):
-        vrptw.search(initialize_solution, iterations=100)
+        vrptw.search(initialize_solution, iterations=200)
         best_cost_current=vrptw.best_cost-2000*len(vrptw.best_solution)-sum(vrptw.calculate_viotime(customers,cus.customers) for cus in vrptw.best_solution)
         if best_cost_current<best_cost_all:
             best_cost_all=best_cost_current
+            error_route, error_cus = vrptw.check_feasibility(vrptw.best_solution, customers)
             result = [instance_name, len(customers), best_cost_all,
-                      float(best_cost), len(vrptw.best_solution), int(best_vehicles), 0, vrptw.best_solution]
+                      float(best_cost), len(vrptw.best_solution), int(best_vehicles), 0, vrptw.best_solution,error_route, error_cus]
+    error_route, error_cus=vrptw.check_feasibility(vrptw.best_solution,customers)
     end = time.time()
     use_time=round(float(end-start),2)
     #print ('运行时间：'+str(end-start)+'秒')
     result[6]=use_time
     results.append(result)
 # list转dataframe
-df = pd.DataFrame(results, columns=['算例','客户数','成本','最佳成本', '车辆数', '最佳车辆数', '运算时间', '具体路线'])
+df = pd.DataFrame(results, columns=['算例','客户数','成本','最佳成本', '车辆数', '最佳车辆数', '运算时间', '具体路线','错误路线','错误客户'])
 # 保存到本地excel
 save_path=r'D:/Python/VRPTW-ALNS/算例结果.xlsx'
 df.to_excel(save_path, index=False)
 
 #print(results)
 #print(max(results[:][1]))
-'''
+
 xx=vrptw.initialize_solution()
 print(xx)
 print(vrptw.best_solution)
 print(len(vrptw.best_solution))
-for route in vrptw.best_solution:
-    ar_time=0
-    c=0
-    ca=0
-    for cu in route.customers:
-        if cu == 0 :
-            continue
-        ca+=customers[cu-1].demand
-        arrival_time = max(ar_time + vrptw.distance_matrix[c][cu], customers[cu - 1].ready_time)
-        #if arrival_time<=customers[cu-1].due_time:
-        #    print('客户'+str(cu)+'到达时间为：'+str(arrival_time)+' due为：'+str(customers[cu-1].due_time)+' 达成要求')
-        if arrival_time>customers[cu-1].due_time:
-            print('客户'+str(cu)+'到达时间为：'+str(arrival_time)+' due为：'+str(customers[cu-1].due_time)+' 未达成要求')
-        c=cu
-    if ca>vehicle_capacity:
-        print('车辆' + str(route.vehicle_id) + '不合理')'''
+def check_feasibility():
+    for route in vrptw.best_solution:
+        ar_time=0
+        c=0
+        ca=0
+        for cu in route.customers:
+            if cu == 0 :
+                continue
+            ca+=customers[cu-1].demand
+            arrival_time = max(ar_time + vrptw.distance_matrix[c][cu], customers[cu - 1].ready_time)
+            #if arrival_time<=customers[cu-1].due_time:
+            #    print('客户'+str(cu)+'到达时间为：'+str(arrival_time)+' due为：'+str(customers[cu-1].due_time)+' 达成要求')
+            if arrival_time>customers[cu-1].due_time:
+                print('客户'+str(cu)+'到达时间为：'+str(arrival_time)+' due为：'+str(customers[cu-1].due_time)+' 未达成要求')
+            c=cu
+        if ca>vehicle_capacity:
+            print('车辆' + str(route.vehicle_id) + '不合理')
