@@ -130,11 +130,11 @@ class VRPTW_LNS:
                                               self.calculate_route_distance(remaining_customers), self.calculate_capcity(customers,remaining_customers)))
         return remaining_routes, removed_customers
 
-    def destroy_greedy(self, solution, percentage=0.1):  # 贪心破坏
+    def destroy_greedy(self, solution, par=1, percentage=0.1):  # 贪心破坏
         num_customers_to_remove = max(int(len(self.customers) * percentage),2)
         # num_customers_to_remove = random.randint(1, num_customers_to_remove)
         removed_customers = []
-        best_position = []
+        sequence_maxmin = []
         save = [0 for i in range(len(self.customers))]
         for route in solution:
             for i in route.customers:
@@ -150,10 +150,20 @@ class VRPTW_LNS:
                 c = route.customers[x + 1]
                 save[i - 1] = self.distance_matrix[a][b] + self.distance_matrix[b][c] - self.distance_matrix[a][c]
         # print(save)
+        for i in range(len(save)):
+            idx = save.index(max(save)) + 1
+            sequence_maxmin.append(idx)
+            save[idx - 1] = 0
+        for i in range(num_customers_to_remove):
+            r=random.random()
+            idx = math.floor(pow(r, par)*len(sequence_maxmin))
+            removed_customers.append(sequence_maxmin[idx])
+            sequence_maxmin.remove(sequence_maxmin[idx])
+        '''''
         for i in range(num_customers_to_remove):
             idx = save.index(max(save)) + 1
             removed_customers.append(idx)
-            save[idx - 1] = 0
+            save[idx - 1] = 0'''
         # print(removed_customers)
         remaining_routes = []
         for route in solution:
@@ -340,7 +350,7 @@ class VRPTW_LNS:
                     use = 0
                     des_use[use] += 1
                 elif ran < p_des_ran + p_des_gre:
-                    partial_solution, removed_customers = self.destroy_greedy(current_solution, percentage=per)
+                    partial_solution, removed_customers = self.destroy_greedy(current_solution,par=2, percentage=per)
                     use = 1
                     des_use[use] += 1
                 else:
@@ -468,7 +478,7 @@ for instance_name in instances_vrptw:
     vrptw = VRPTW_LNS(depot, customers, vehicle_capacity, max_vehicles)
     initialize_solution=vrptw.initialize_solution()
     for segment in range(4):
-        vrptw.search(initialize_solution, iterations=50)
+        vrptw.search(initialize_solution, iterations=100)
         best_cost_current=vrptw.best_cost-2000*len(vrptw.best_solution)-sum(vrptw.calculate_viotime(customers,cus.customers) for cus in vrptw.best_solution)
         if best_cost_current<best_cost_all:
             best_cost_all=best_cost_current
