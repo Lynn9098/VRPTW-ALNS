@@ -118,11 +118,10 @@ class VRPTW_LNS:
             c=i
         return vio_time
 
-    def destroy_random(self, solution, percentage=0.1):  # 随机挑选破坏
-        num_customers_to_remove = max(int(len(self.customers) * percentage),2)
+    def destroy_random(self, solution, per=2):  # 随机挑选破坏
+        num_customers_to_remove = per
         # num_customers_to_remove = random.randint(1, num_customers_to_remove)
-        removed_customers = random.sample([c for route in solution for c in route.customers if c != 0],
-                                          num_customers_to_remove)
+        removed_customers = random.sample([c for route in solution for c in route.customers if c != 0],num_customers_to_remove)
         remaining_routes = []
         for route in solution:
             remaining_customers = [c for c in route.customers if c not in removed_customers]
@@ -132,8 +131,8 @@ class VRPTW_LNS:
                                               self.calculate_route_distance(remaining_customers), self.calculate_capcity(customers,remaining_customers)))
         return remaining_routes, removed_customers
 
-    def destroy_greedy(self, solution, par=1, percentage=0.1):  # 贪心破坏
-        num_customers_to_remove = max(int(len(self.customers) * percentage),2)
+    def destroy_greedy(self, solution, par=1, per=2):  # 贪心破坏
+        num_customers_to_remove = per
         # num_customers_to_remove = random.randint(1, num_customers_to_remove)
         removed_customers = []
         sequence_maxmin = []
@@ -175,26 +174,26 @@ class VRPTW_LNS:
                                               self.calculate_route_distance(remaining_customers), self.calculate_capcity(customers,remaining_customers)))
         return remaining_routes, removed_customers
 
-    def customer_related(self, customers, cus1, cus2):
+    def customer_related(self, cus1, cus2):
         a = 0
         a1 = 1 * (self.distance_matrix[cus1][cus2])
-        a2 = 0.2 * (abs(customers[cus1 - 1].ready_time - customers[cus2 - 1].ready_time) + abs(
-            customers[cus1 - 1].due_time - customers[cus2 - 1].due_time))
-        a3 = 1 * (abs(customers[cus1 - 1].demand - customers[cus2 - 1].demand))
+        a2 = 0.2 * (abs(self.customers[cus1 - 1].ready_time - self.customers[cus2 - 1].ready_time) + abs(
+            self.customers[cus1 - 1].due_time - self.customers[cus2 - 1].due_time))
+        a3 = 1 * (abs(self.customers[cus1 - 1].demand - self.customers[cus2 - 1].demand))
         a = a1 + a2 + a3
         return a
 
-    def destroy_shaw(self, solution, customers, percentage=0.1):
-        num_customers_to_remove = max(int(len(self.customers) * percentage),2)
-        destroy = random.randint(1, len(customers))
+    def destroy_shaw(self, solution, per=2):
+        num_customers_to_remove = per
+        destroy = random.randint(1, len(self.customers))
         removed_customers = []
-        remaining_customers = [c for c in range(1, len(customers) + 1)]
+        remaining_customers = [c for c in range(1, len(self.customers) + 1)]
         removed_customers.append(destroy)
         remaining_customers.remove(destroy)
         for i in range(1, num_customers_to_remove - 1):
             related = []
-            for j in range(1, len(customers) + 1):
-                related.append(self.customer_related(customers, destroy, j))
+            for j in range(1, len(self.customers) + 1):
+                related.append(self.customer_related(destroy, j))
                 if j not in remaining_customers:
                     related[j - 1] = 0
             related[destroy - 1] = 0
@@ -234,7 +233,7 @@ class VRPTW_LNS:
             increase_sort = increases
             increase_sort.sort(reverse=True)
             r = random.random()
-            idx_increase = math.floor(pow(r, par) * len(increase_sort))
+            idx_increase =0# math.floor(pow(r, par) * len(increase_sort))
             best_route, best_position, insert_id = increases_route[increases.index(increase_sort[idx_increase])]
             partial_solution[best_route-1].customers.insert(best_position, insert_id)
             partial_solution[best_route-1].distance=self.calculate_route_distance(partial_solution[best_route-1].customers)
@@ -311,7 +310,7 @@ class VRPTW_LNS:
         for i in range(len(partial_solution)):
             partial_solution[i].vehicle_id = i + 1
 
-    def check_feasibility(self, best_solution, customers):
+    def check_feasibility(self, best_solution):
         error_route=[]
         error_cus = []
         have_customers = []#检查是否有重复客户
@@ -323,22 +322,31 @@ class VRPTW_LNS:
                 if cu == 0:
                     continue
                 have_customers.append(cu)
-                ca += customers[cu - 1].demand
-                arrival_time = max(ar_time + vrptw.distance_matrix[c][cu], customers[cu - 1].ready_time)
+                ca += self.customers[cu - 1].demand
+                arrival_time = max(ar_time + vrptw.distance_matrix[c][cu], self.customers[cu - 1].ready_time)
                 # if arrival_time<=customers[cu-1].due_time:
                 #    print('客户'+str(cu)+'到达时间为：'+str(arrival_time)+' due为：'+str(customers[cu-1].due_time)+' 达成要求')
-                if arrival_time > customers[cu - 1].due_time:
+                if arrival_time > self.customers[cu - 1].due_time:
                     print('客户' + str(cu) + '到达时间为：' + str(arrival_time) + ' due为：' + str(
-                        customers[cu - 1].due_time) + ' 未达成要求')
+                        self.customers[cu - 1].due_time) + ' 未达成要求')
                     error_cus.append([route.vehicle_id,cu,'时间不合理'])
                 c = cu
             if ca > vehicle_capacity:
                 print('车辆' + str(route.vehicle_id) + '不合理')
                 error_route.append([route,'容量不合理'])
-        for cus in customers:
+        for cus in self.customers:
             if cus.idx not in have_customers:
                 error_cus.append([id,'缺少该客户'])
         return error_route, error_cus
+
+    def get_per(self,iterations):
+        per_low=min(math.ceil(0.02*len(self.customers)),10)
+        per_high=min(math.ceil(0.02*len(self.customers)),30)
+        per_r=random.random()
+        #per_r=pow(per_r,iterations/100)
+        per=int(per_r*per_low+(1-per_r)*per_high)
+        #print(per)
+        return per
 
     def search(self, initialize_solution, instance_name, iterations=500):
         des_score = [0, 0, 0]  # [random. greedy, shaw]
@@ -356,7 +364,6 @@ class VRPTW_LNS:
         p_rep_reg = w_rep[2] / sum(w_rep)
         a = 0.97
         j = 0
-        per=0.02
         #per=random.uniform(0.1,0.3)
         current_solution = initialize_solution
         current_cost = sum(route.distance for route in current_solution)
@@ -379,16 +386,17 @@ class VRPTW_LNS:
                 p_des_gre = w_des[1] / sum(w_des)
                 p_des_sha = w_des[2] / sum(w_des)
                 ran = random.random()
+                per=self.get_per(iterations=iteration)
                 if ran < p_des_ran or acc_bad==1:  # 选择destroy算子
-                    partial_solution, removed_customers = self.destroy_random(current_solution, percentage=per)
+                    partial_solution, removed_customers = self.destroy_random(current_solution, per=per)
                     use = 0
                     des_use[use] += 1
                 elif ran < p_des_ran + p_des_gre:
-                    partial_solution, removed_customers = self.destroy_greedy(current_solution,par=2, percentage=per)
+                    partial_solution, removed_customers = self.destroy_greedy(current_solution,par=2, per=per)
                     use = 1
                     des_use[use] += 1
                 else:
-                    partial_solution, removed_customers = self.destroy_shaw(current_solution, customers, percentage=per)
+                    partial_solution, removed_customers = self.destroy_shaw(current_solution, per=per)
                     use = 2
                     des_use[use] += 1
                 self.clear_0(partial_solution)
@@ -422,12 +430,12 @@ class VRPTW_LNS:
                     # des_use[use]-=1
                     # rep_use[use_r]-=1
                 elif new_cost<self.best_cost or len(partial_solution)<len(self.best_solution):
-                #if new_cost < self.best_cost and self.accept(self.customers, partial_solution, vehicle_capacity) == True:
+                #if new_cost < self.best_cost or len(partial_solution) < len(self.best_solution):
                     current_solution = partial_solution
                     current_cost = new_cost
                     self.best_solution = partial_solution
                     self.best_cost = new_cost
-                    print(f"Iteration {iteration + 1},T: {T}，Best Cost: {self.best_cost}，Vehicles: {len(self.best_solution)}")
+                    print(f"Instance: {instance_name}, Iteration {iteration + 1},T: {T}，Best Cost: {self.best_cost}，Vehicles: {len(self.best_solution)}")
                     self.clear_0(partial_solution)
                     j = 0
                     des_score[use] += 1.5
@@ -452,8 +460,9 @@ class VRPTW_LNS:
                 w_des[use] = b * w_des[use] + (1 - b) * des_score[use] / des_use[use]  # 更新权重
                 w_rep[use_r] = b * w_rep[use_r] + (1 - b) * rep_score[use_r] / rep_use[use_r]
                 #history_cost.append(new_cost)
+                #print(f"Instance: {instance_name}, Iteration {iteration + 1},T: {T}，Current Cost: {current_cost}，Vehicles: {len(current_solution)}")
                 T = a * T
-                j += 1
+            j += 1
         print(f'使用destroy_random: {des_use[0]}次')
         print(f'使用destroy_greedy: {des_use[1]}次')
         print(f'使用destroy_shaw  : {des_use[2]}次')
@@ -468,8 +477,8 @@ random.seed(12138)
 results=[]
 filePath = r'D:\Python\VRPTW-ALNS\solomon-100'
 #instances_vrptw=os.listdir(filePath)
-instances_vrptw=['r101.txt','r102.txt','r103.txt','r104.txt','r105.txt','r106.txt',
-                 'r107.txt','r108.txt','r109.txt','r110.txt','r111.txt','r112.txt',]
+instances_vrptw=['r101.txt']#,'r102.txt','r103.txt']#,'r104.txt','r105.txt','r106.txt',
+                 #'r107.txt','r108.txt','r109.txt','r110.txt','r111.txt','r112.txt',]
 for instance_name in instances_vrptw:
     start = time.time()
     file_path = r'D:\Python\VRPTW-ALNS\solomon-100'+'\\'+ instance_name
@@ -512,15 +521,14 @@ for instance_name in instances_vrptw:
     best_cost_all=float('inf')
     vrptw = VRPTW_LNS(depot, customers, vehicle_capacity, max_vehicles)
     initialize_solution=vrptw.initialize_solution()
-    for segment in range(4):
+    for segment in range(5):
         vrptw.search(initialize_solution,instance_name, iterations=200)
         best_cost_current=vrptw.best_cost
         if best_cost_current<best_cost_all:
             best_cost_all=best_cost_current
-            error_route, error_cus = vrptw.check_feasibility(vrptw.best_solution, customers)
+            error_route, error_cus = vrptw.check_feasibility(vrptw.best_solution)
             result = [instance_name, len(customers), best_cost_all,float(best_cost), len(initialize_solution),
                       len(vrptw.best_solution), int(best_vehicles), 0, vrptw.best_solution,error_route, error_cus]
-    error_route, error_cus=vrptw.check_feasibility(vrptw.best_solution,customers)
     end = time.time()
     use_time=round(float(end-start),2)
     #print ('运行时间：'+str(end-start)+'秒')
