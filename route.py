@@ -1,11 +1,18 @@
 import sys
 
 class Route:
-    def __init__(self, instance, nodes, feasible):
+    def __init__(self, instance, nodes, nodesSet):
         self.instance = instance
         self.nodes = nodes
-        self.feasible = feasible
-        self.distance = 0
+        self.nodesSet = nodesSet
+        self.feasible = self.isFeasible()
+        if self.feasible:
+            # 事先check路径是否可行
+            self.distance = self.computeDistance()
+        else:
+            self.distance = sys.maxsize
+            self.load = sys.maxsize
+        # self.distance = 0
         
     
     def isFeasible(self):
@@ -27,6 +34,7 @@ class Route:
             if curLoad > self.instance.capacity:
                 # check capacity constraint
                 return False
+        self.load = curLoad
         return True
     
     def computeDistance(self):
@@ -39,5 +47,16 @@ class Route:
         for i in range(1, len(self.nodes)):
             prevID, postID = self.nodes[i - 1].id, self.nodes[i].id
             totalDist += self.instance.distMatrix[prevID][postID]
-        return round(totalDist, 2)
+        return totalDist
+    
+    def calculateServiceStartTime(self):
+        """calculate the begin of service time for each customer of this route
+        """
+        curTime = 0
+        for i in range(1, len(self.nodes) - 1):
+            prevNode = self.nodes[i - 1]
+            curNode = self.nodes[i]
+            dist = self.instance.distMatrix[prevNode.id][curNode.id]
+            curTime = max(curNode.readyTime, curTime + prevNode.serviceTime + dist)
+            self.nodes[i].serviceStartTime = curTime
             
