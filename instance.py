@@ -79,8 +79,7 @@ class Instance:
         
         for cus in customers[:5]:
             print(cus)
-        print(depot)
-        print(type(customers))
+
         return Instance(fileName, numVehicle, capacity, depot, customers)
         
     
@@ -92,9 +91,10 @@ if __name__ == "__main__":
     for inst in instList:
         fileName = folder + inst
         Instance.readInstance(fileName)
-    import operator
-    a = [1,2,3,4,4,3,2,1]
-    min_index, min_value = min(enumerate(a), key=operator.itemgetter(1))
-    # print(min_index, min_value)
-    print(a)
+    # import operator
+    # a = [1,2,3,4,4,3,2,1]
+    # min_index, min_value = min(enumerate(a), key=operator.itemgetter(1))
+    # # print(min_index, min_value)
+    # print(a)
+    
     

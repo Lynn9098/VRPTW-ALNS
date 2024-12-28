@@ -12,7 +12,7 @@ class Node:
         self.serviceStartTime = serviceStartTime
     
     def __str__(self):
-        return (f"Node id: {self.id}; location: ({self.x},{self.y}) demand: {self.demand}; readyTime: {self.readyTime}; dueTime: {self.dueTime}; serviceTime:{self.serviceTime};")
+        return (f"Node id: {self.id}; location: ({self.x},{self.y}) demand: {self.demand}; readyTime: {self.readyTime}; dueTime: {self.dueTime}; serviceTime:{self.serviceTime}; serviceStartTime: {self.serviceStartTime}")
 
     def getDistance(p1, p2):
         """Calculate the eculidean distance between p1 and p2
@@ -26,6 +26,6 @@ class Node:
         """
         dx = p1.x - p2.x
         dy = p1.y - p2.y
-        return round(math.sqrt(dx ** 2 + dy ** 2))
+        return math.sqrt(dx ** 2 + dy ** 2)
     
     

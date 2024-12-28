@@ -12,8 +12,7 @@ class Route:
         else:
             self.distance = sys.maxsize
             self.load = sys.maxsize
-        # self.distance = 0
-        
+
     
     def isFeasible(self):
         """check if the route is feasible
@@ -27,12 +26,13 @@ class Route:
             preID, postID = self.nodes[i - 1].id, self.nodes[i].id
             curTime += self.instance.distMatrix[preID][postID]
             if curTime > self.nodes[i].dueTime:
-                # check time window
+                print("Break time window!!")
                 return False
             curTime = max(curTime, self.nodes[i].readyTime) + self.nodes[i].serviceTime
             curLoad += self.nodes[i].demand
             if curLoad > self.instance.capacity:
                 # check capacity constraint
+                print("Break capacity capacity!!")
                 return False
         self.load = curLoad
         return True
@@ -59,4 +59,9 @@ class Route:
             dist = self.instance.distMatrix[prevNode.id][curNode.id]
             curTime = max(curNode.readyTime, curTime + prevNode.serviceTime + dist)
             self.nodes[i].serviceStartTime = curTime
-            
+    
+    def copy(self):
+        nodesCopy = self.nodes.copy()
+        nodesSetCopy = self.nodesSet.copy()
+        return Route(self.instance, nodesCopy, nodesSetCopy)
+    
