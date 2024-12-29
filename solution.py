@@ -16,7 +16,7 @@ class Solution:
         return self.distance
     
     def executeTimeNN(self):
-        """Time-oriented NN in Solomon 1987
+        """Time-oriented NN in Solomon 1987, inital solution construction
         """
         sigma_1, sigma_2, sigma_3 = 1/3, 1/3, 1/3
         # determine the weight
@@ -40,7 +40,7 @@ class Solution:
                 choseCus = self.notServed[min_index]
                 choseCus.serviceStartTime = max(choseCus.readyTime, self.instance.distMatrix[0][choseCus.id])
                 nodeList = [self.instance.depot, choseCus, self.instance.depot]
-                newRoute = Route(self.instance, nodeList, set(nodeList))
+                newRoute = Route(self.instance, nodeList, set([0, choseCus.id]))
                 # update start service time
                 self.served.append(choseCus)
                 lastCusIdx = choseCus.id
@@ -75,15 +75,19 @@ class Solution:
                     nxtCus.serviceStartTime = max(nxtCus.readyTime, self.instance.distMatrix[lastCustomer.id][nxtCus.id] + lastCustomer.serviceStartTime + lastCustomer.serviceTime)
                     lastCusIdx = nxtCus.id
                     self.routes[-1].nodes.insert(-1, nxtCus)
-                    self.routes[-1].nodesSet.add(nxtCus)
+                    self.routes[-1].nodesSet.add(nxtCus.id)
                     self.routes[-1].load += nxtCus.demand
-                    self.served.append(choseCus)
+                    self.served.append(nxtCus)
                     self.notServed.pop(nxtCusIdx)
                 else:
                     lastCusIdx = -1
                 
                 
+    def removeCustomer(self, cusId):
         
+        pass
+    
+    
     def copy(self):
         """
         Method that creates a copy of the solution and returns it

@@ -1,6 +1,7 @@
 import random, time
 from instance import Instance
 from solution import Solution
+from parameters import Parameters
 
 class ALNS:
     """
@@ -15,6 +16,7 @@ class ALNS:
 
     def __init__(self, instance):
         self.instance = instance
+        self.randomGen = random.random(Parameters.randomSeed) # for reproducibility
 
     def execute(self):
         starttime = time.time()
@@ -31,18 +33,12 @@ class ALNS:
         self.currentSolution = Solution(self.instance, list(), list(), self.instance.customers.copy())
         self.currentSolution.executeTimeNN()
         self.bestSolution = self.currentSolution.copy()
-        # for route in self.bestSolution.routes:
-        #     for n in route.nodes:
-        #         print(n)
-        #     print("")
         test = [-1 for _ in range(101)]
         print(f"Total trucks: { len(self.currentSolution.routes) }")
-        for route in self.currentSolution.routes:
-            # print(route)
-            for n in route.nodes:
-                # print(n.id)
-                if test[n.id] == -1:
-                    test[n.id] = 0
+        # for route in self.currentSolution.routes:
+        #     for n in route.nodes:
+        #         if test[n.id] == -1:
+        #             test[n.id] = 0
                     
     def display(self, isbest = True):
         if isbest:
@@ -65,3 +61,9 @@ class ALNS:
                     print(m)
                 print("")
                 
+    
+    
+    def destroyAndRepair(self):
+        # depict the destroy and repair process ... 
+        pass
+    

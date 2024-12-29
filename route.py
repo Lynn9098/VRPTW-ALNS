@@ -2,6 +2,13 @@ import sys
 
 class Route:
     def __init__(self, instance, nodes, nodesSet):
+        """_summary_
+
+        Args:
+            instance (Instance): current instance
+            nodes (list[Node]): the sequence of visiting
+            nodesSet (set(int)): restore set of customers index of the route
+        """
         self.instance = instance
         self.nodes = nodes
         self.nodesSet = nodesSet
@@ -59,6 +66,13 @@ class Route:
             dist = self.instance.distMatrix[prevNode.id][curNode.id]
             curTime = max(curNode.readyTime, curTime + prevNode.serviceTime + dist)
             self.nodes[i].serviceStartTime = curTime
+    
+    def removeCustomer(self, cusId):
+        if cusId not in self.nodesSet:
+            print("WARNING! Trying to remove a non-existing customer!")
+            return
+
+        pass
     
     def copy(self):
         nodesCopy = self.nodes.copy()
