@@ -40,10 +40,9 @@ class Solution:
                 choseCus = self.notServed[min_index]
                 choseCus.serviceStartTime = max(choseCus.readyTime, self.instance.distMatrix[0][choseCus.id])
                 nodeList = [self.instance.depot, choseCus, self.instance.depot]
-                newRoute = Route(self.instance, nodeList, set([0, choseCus.id]))
+                newRoute = Route(self.instance, nodeList, set([choseCus]))
                 # update start service time
                 self.served.append(choseCus)
-                lastCusIdx = choseCus.id
                 self.notServed.pop(min_index)
                 self.routes.append(newRoute)
                 lastCusIdx = choseCus.id
@@ -75,18 +74,52 @@ class Solution:
                     nxtCus.serviceStartTime = max(nxtCus.readyTime, self.instance.distMatrix[lastCustomer.id][nxtCus.id] + lastCustomer.serviceStartTime + lastCustomer.serviceTime)
                     lastCusIdx = nxtCus.id
                     self.routes[-1].nodes.insert(-1, nxtCus)
-                    self.routes[-1].nodesSet.add(nxtCus.id)
+                    self.routes[-1].nodesSet.add(nxtCus)
                     self.routes[-1].load += nxtCus.demand
                     self.served.append(nxtCus)
                     self.notServed.pop(nxtCusIdx)
                 else:
                     lastCusIdx = -1
                 
-                
-    def removeCustomer(self, cusId):
+    def removeCustomer(self, customer):
+        deleteRoute = False 
+        # judge whether to delete current route ... 
+        for route in self.routes:
+            if customer in route.nodesSet:
+                # find it in this route... remove it
+                # print(f"remove cus {customer.id}")
+                route.removeCustomer(customer)
+                break
         
-        pass
+        self.served.remove(customer)
+        self.notServed.append(customer)
+
+    def __str__(self):
+        num_route = len(self.routes)
+        cost = 0
+        phase1 = f"Truck used: {len(self.routes)}\n"
+        for i in range(num_route):
+            phase1 += f"Truck {i}\n"
+            nodes = self.routes[i].nodes
+            cost += self.routes[i].distance
+            for m in nodes:
+                phase1 += (str(m) + "\n")
+        phase1 = f"Cost: {cost}\n"
+        return (phase1)
     
+    # def executeRandomRemoval(self, nRemoval, randomGen):
+    #     """execute the random removal
+    #     Args:
+    #         nRemoval (int): num of customers to remove
+    #         randomGen (_type_): random generator
+    #     """
+    #     print(f"Random Removal: remove  {nRemoval} customers.")
+    #     for _ in range(nRemoval):
+    #         if len(self.served) == 0:
+    #             break
+    #         # pick a random customer and remove it from the solutoin
+    #         cus = randomGen.choice(self.served)
+    #         self.removeRequest(cus)
     
     def copy(self):
         """

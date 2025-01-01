@@ -1,5 +1,6 @@
 import sys
 
+
 class Route:
     def __init__(self, instance, nodes, nodesSet):
         """_summary_
@@ -7,7 +8,7 @@ class Route:
         Args:
             instance (Instance): current instance
             nodes (list[Node]): the sequence of visiting
-            nodesSet (set(int)): restore set of customers index of the route
+            nodesSet (set(Node)): restore set of customers index of the route
         """
         self.instance = instance
         self.nodes = nodes
@@ -67,12 +68,46 @@ class Route:
             curTime = max(curNode.readyTime, curTime + prevNode.serviceTime + dist)
             self.nodes[i].serviceStartTime = curTime
     
-    def removeCustomer(self, cusId):
-        if cusId not in self.nodesSet:
+    def removeCustomer(self, customer):
+        if customer not in self.nodesSet:
             print("WARNING! Trying to remove a non-existing customer!")
             return
+        self.adjustTW(customer)
+        self.nodesSet.remove(customer)
+        self.nodes.remove(customer)
+    
+    def adjustTW(self, customer):
+        """An efficient way to adjust the start service timestamp, together with the distance of the route:
+        following :https://mp.weixin.qq.com/s/rcnppKJLegzCirictTItFA
 
-        pass
+        Args:
+            customer (_type_): _description_
+        """
+        rmvCusIdx = self.nodes.index(customer)
+        prevIdx = rmvCusIdx - 1; postIdx = rmvCusIdx + 1
+        # get the previous node and the post node
+        postNode = self.nodes[postIdx]
+        postServiceStartTime = postNode.serviceStartTime
+        self.distance -= (self.instance.distMatrix[self.nodes[prevIdx].id][customer.id] + \
+            self.instance.distMatrix[customer.id][self.nodes[postIdx].id] - self.instance.distMatrix[self.nodes[prevIdx].id][self.nodes[postIdx].id])
+        
+        if postServiceStartTime == postNode.readyTime:
+            # No need to adjust the time windows
+            print("No need to adjust!")
+            return
+        else:
+            # need to adjust the service time of nodes afterwards ... 
+            for j in range(rmvCusIdx + 1, len(self.nodes) - 1):
+                curServiceStartTime = self.nodes[prevIdx].serviceStartTime + \
+                    self.instance.distMatrix[self.nodes[prevIdx].id][self.nodes[j].id] + \
+                    self.nodes[prevIdx].serviceTime
+                # print(self.nodes[j])
+                self.nodesSet.remove(self.nodes[j])
+                self.nodes[j].serviceStartTime = max(curServiceStartTime, self.nodes[j].readyTime)
+                self.nodesSet.add(self.nodes[j])
+                prevIdx = j
+        return 
+
     
     def copy(self):
         nodesCopy = self.nodes.copy()
