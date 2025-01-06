@@ -25,8 +25,9 @@ class ALNS:
         endtime = time.time()
         cpuTime = round(endtime - starttime, 3)
         print(f"Terminated! CPU times {cpuTime} seconds")
-        self.display()
-        self.destroyAndRepair(0,0,10)
+        # self.destroyAndRepair(0,0,30)
+        # self.display()
+        
     
     def constructInitialSolution(self):
         """Construct the initial solution
@@ -34,6 +35,7 @@ class ALNS:
         # 1. based on Solomon's time-oriented Nearest Neighbur Heuristic 
         self.currentSolution = Solution(self.instance, list(), list(), self.instance.customers.copy())
         self.currentSolution.executeTimeNN()
+        self.currentSolution.executeForwardSlack()
         self.bestSolution = self.currentSolution.copy()
         # test = [-1 for _ in range(101)]
         print(f"Total trucks: { len(self.currentSolution.routes) }")
@@ -71,6 +73,7 @@ class ALNS:
         self.tempSolution = self.currentSolution.copy()
         destroySolution = Destroy(self.instance, self.tempSolution)
         destroySolution.executeRandomRemoval(size, self.randomGen)
+        print("...")
         print(destroySolution)
         
     

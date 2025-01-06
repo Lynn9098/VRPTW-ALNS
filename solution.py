@@ -15,6 +15,10 @@ class Solution:
             self.distance += route.distance
         return self.distance
     
+    def executeForwardSlack(self):
+        for route in self.routes:
+            route.forgePushForward()
+    
     def executeTimeNN(self):
         """Time-oriented NN in Solomon 1987, inital solution construction
         """
@@ -39,6 +43,7 @@ class Solution:
                 min_index, min_value = min(enumerate(closeDist), key = operator.itemgetter(1))
                 choseCus = self.notServed[min_index]
                 choseCus.serviceStartTime = max(choseCus.readyTime, self.instance.distMatrix[0][choseCus.id])
+                choseCus.waitingTime = max(0, choseCus.readyTime - (self.instance.distMatrix[0][choseCus.id]))
                 nodeList = [self.instance.depot, choseCus, self.instance.depot]
                 newRoute = Route(self.instance, nodeList, set([choseCus]))
                 # update start service time
@@ -55,7 +60,7 @@ class Solution:
                 lastRoute = self.routes[-1]
                 lastCustomer = lastRoute.nodes[-2]
                 # store the close distance and target route ... 
-                nxtCus = -1; nxtRate = float('inf'); nxtCusIdx = -1
+                nxtCus = None; nxtRate = float('inf'); nxtCusIdx = -1
                 for nextIdx, nextCus in enumerate(self.notServed):
                     # check feasibility
                     if lastCustomer.serviceStartTime + lastCustomer.serviceTime + self.instance.distMatrix[lastCustomer.id][nextCus.id] > nextCus.dueTime:
@@ -69,9 +74,10 @@ class Solution:
                         nxtCus = nextCus
                         nxtRate = curRate
                         nxtCusIdx = nextIdx
-                if nxtCus != -1:
+                if nxtCus != None:
                     # find feasible customer! Just Insert it!
                     nxtCus.serviceStartTime = max(nxtCus.readyTime, self.instance.distMatrix[lastCustomer.id][nxtCus.id] + lastCustomer.serviceStartTime + lastCustomer.serviceTime)
+                    nxtCus.waitingTime = max(0, nxtCus.readyTime - (self.instance.distMatrix[lastCustomer.id][nxtCus.id] + lastCustomer.serviceStartTime + lastCustomer.serviceTime))
                     lastCusIdx = nxtCus.id
                     self.routes[-1].nodes.insert(-1, nxtCus)
                     self.routes[-1].nodesSet.add(nxtCus)
@@ -96,15 +102,17 @@ class Solution:
 
     def __str__(self):
         num_route = len(self.routes)
+        cnt_customers = 0
         cost = 0
         phase1 = f"Truck used: {len(self.routes)}\n"
         for i in range(num_route):
             phase1 += f"Truck {i}\n"
+            cnt_customers += (len(self.routes[i].nodes) - 2)
             nodes = self.routes[i].nodes
             cost += self.routes[i].distance
             for m in nodes:
                 phase1 += (str(m) + "\n")
-        phase1 = f"Cost: {cost}\n"
+        phase1 += f"Cost: {cost}, Customers {cnt_customers}\n"
         return (phase1)
     
     # def executeRandomRemoval(self, nRemoval, randomGen):

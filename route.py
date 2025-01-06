@@ -21,7 +21,23 @@ class Route:
             self.distance = sys.maxsize
             self.load = sys.maxsize
 
-    
+    def forgePushForward(self):
+        """construct and rectify push forward procedure ... 
+        """
+
+        self.forwardTimeSlack = [0 for _ in range(len(self.nodes))]
+        n = len(self.nodes)
+        for i in range(n - 1, -1, -1):
+            if i == n - 1:
+                self.forwardTimeSlack[i] = self.nodes[i].dueTime - (self.nodes[i - 1].serviceStartTime + self.nodes[i - 1].serviceTime + self.instance.distMatrix[self.nodes[i - 1].id][0])
+            else:
+                self.forwardTimeSlack[i] = min(self.forwardTimeSlack[i + 1] + self.nodes[i + 1].waitingTime, self.nodes[i].dueTime - self.nodes[i].serviceStartTime)
+
+        for idx, node in enumerate(self.nodes):
+            print(node)
+            print(float(self.forwardTimeSlack[idx]))
+
+
     def isFeasible(self):
         """check if the route is feasible
         """
@@ -107,7 +123,26 @@ class Route:
                 self.nodesSet.add(self.nodes[j])
                 prevIdx = j
         return 
+    
+    def greedyInsert(self, customer):
+        """Greedy insert the customer into this route .. 
 
+        Args:
+            customer (node): node of customers ...
+        """
+        nodesSetCopy = self.nodesSet.copy()
+        nodesSetCopy.add(customer)
+        minDist = sys.maxsize
+        bestInsert = None # record the best insertion result ...
+        minCost = sys.maxsize 
+        
+        # iterate over all possible locations for insertion ... 
+        # for i in range(1, len(self.nodes)):
+        # according to bi-search of Time Windows
+            
+            
+        pass
+        
     
     def copy(self):
         nodesCopy = self.nodes.copy()
