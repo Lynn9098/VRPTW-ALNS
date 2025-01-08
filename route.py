@@ -23,8 +23,9 @@ class Route:
 
     def forgePushForward(self):
         """construct and rectify push forward procedure ... 
+            details: 
+            The Vehicle Routing Problem with Time Windows: Minimizing Route Duration by Martin W. P. Savelsbergh, 1992
         """
-
         self.forwardTimeSlack = [0 for _ in range(len(self.nodes))]
         n = len(self.nodes)
         for i in range(n - 1, -1, -1):
@@ -32,10 +33,6 @@ class Route:
                 self.forwardTimeSlack[i] = self.nodes[i].dueTime - (self.nodes[i - 1].serviceStartTime + self.nodes[i - 1].serviceTime + self.instance.distMatrix[self.nodes[i - 1].id][0])
             else:
                 self.forwardTimeSlack[i] = min(self.forwardTimeSlack[i + 1] + self.nodes[i + 1].waitingTime, self.nodes[i].dueTime - self.nodes[i].serviceStartTime)
-
-        for idx, node in enumerate(self.nodes):
-            print(node)
-            print(float(self.forwardTimeSlack[idx]))
 
 
     def isFeasible(self):
@@ -113,7 +110,7 @@ class Route:
             return
         else:
             # need to adjust the service time of nodes afterwards ... 
-            for j in range(rmvCusIdx + 1, len(self.nodes) - 1):
+            for j in range(rmvCusIdx, len(self.nodes) - 1):
                 curServiceStartTime = self.nodes[prevIdx].serviceStartTime + \
                     self.instance.distMatrix[self.nodes[prevIdx].id][self.nodes[j].id] + \
                     self.nodes[prevIdx].serviceTime
@@ -132,16 +129,29 @@ class Route:
         """
         nodesSetCopy = self.nodesSet.copy()
         nodesSetCopy.add(customer)
-        minDist = sys.maxsize
         bestInsert = None # record the best insertion result ...
         minCost = sys.maxsize 
         
         # iterate over all possible locations for insertion ... 
-        # for i in range(1, len(self.nodes)):
-        # according to bi-search of Time Windows
-            
-            
-        pass
+        for i in range(1, len(self.nodes)):
+            prevNodeId = self.nodes[i - 1].id
+            succNodeId = self.nodes[i].id
+            newServiceStartTime = max(customer.readyTime, self.nodes[i - 1].serviceStartTime + self.nodes[i - 1].serviceTime + self.instance.distMatrix[prevNodeId][customer.id])
+            if newServiceStartTime > customer.dueTime or \
+                newServiceStartTime + customer.serviceTime + self.instance.distMatrix[customer.id][succNodeId] - self.nodes[i].serviceStartTime >  self.forwardTimeSlack[i]:
+                continue
+            # otherwise: can be inserted into this position ... 
+            costIncrement = self.instance.distMatrix[prevNodeId][customer.id] + self.instance.distMatrix[customer.id][succNodeId]
+            if costIncrement < minCost:
+                minCost = costIncrement
+                routeCopy = self.nodes.copy()
+                # forge the new nodes list ...
+                routeCopy.insert(i, customer)
+                bestInsert = routeCopy
+        bestRoute = Route(self.instance, bestInsert, nodesSetCopy)
+        bestRoute.adjustTW(customer)
+        bestRoute.forgePushForward()
+        return bestRoute, minCost
         
     
     def copy(self):

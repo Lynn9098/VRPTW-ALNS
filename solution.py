@@ -110,8 +110,8 @@ class Solution:
             cnt_customers += (len(self.routes[i].nodes) - 2)
             nodes = self.routes[i].nodes
             cost += self.routes[i].distance
-            for m in nodes:
-                phase1 += (str(m) + "\n")
+            for j, node in enumerate(nodes):
+                phase1 += (str(node) + "; forwardTimeSlack: " + str(self.routes[i].forwardTimeSlack[j]) + "\n")
         phase1 += f"Cost: {cost}, Customers {cnt_customers}\n"
         return (phase1)
     

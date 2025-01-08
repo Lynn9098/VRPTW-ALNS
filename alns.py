@@ -2,6 +2,7 @@ import random, time
 from instance import Instance
 from solution import Solution
 from destroy import Destroy
+from repair import Repair
 from parameters import Parameters
 
 class ALNS:
@@ -25,8 +26,14 @@ class ALNS:
         endtime = time.time()
         cpuTime = round(endtime - starttime, 3)
         print(f"Terminated! CPU times {cpuTime} seconds")
+        # print(self.route)
         # self.destroyAndRepair(0,0,30)
-        # self.display()
+        self.tempSolution = self.currentSolution.copy()
+        destroySolution = Destroy(self.instance, self.tempSolution)
+        destroySolution.executeRandomRemoval(5, self.randomGen)
+        repairSolution = Repair(self.instance, self.tempSolution)
+        repairSolution.executeGreedyInsertion(self.randomGen)
+        # self.display(isbest= False)
         
     
     def constructInitialSolution(self):
@@ -47,24 +54,27 @@ class ALNS:
                     
     def display(self, isbest = True):
         if isbest:
-            num_route = len(self.bestSolution.routes)
-            print(f"Solution objective: {self.bestSolution.distance}; \nTruck used: {len(self.bestSolution.routes)}\n\n")
-            for i in range(num_route):
-                print(f"Truck {i}")
-                nodes = self.currentSolution.routes[i].nodes
-                for m in nodes:
-                    print(m)
-                print("")
+            print(self.bestSolution)
+            # num_route = len(self.bestSolution.routes)
+            # print(f"Solution objective: {self.bestSolution.distance}; \nTruck used: {len(self.bestSolution.routes)}\n\n")
+            # for i in range(num_route):
+            #     print(f"Truck {i}")
+            #     print(self.bestSolution.routes[i])
+                # nodes = self.currentSolution.routes[i].nodes
+                # for m in nodes:
+                #     print(m)
+                # print("")
         else:
-            num_route = len(self.currentSolution.routes)
-            
-            print(f"Solution objective: {self.currentSolution.distance}; \nTruck used: {len(self.currentSolution.routes)}\n\n")
-            for i in range(num_route):
-                print(f"Truck {i}")
-                nodes = self.currentSolution.routes[i].nodes
-                for m in nodes:
-                    print(m)
-                print("")
+            print(self.currentSolution)
+            # num_route = len(self.currentSolution.routes)
+            # print(f"Solution objective: {self.currentSolution.distance}; \nTruck used: {len(self.currentSolution.routes)}\n\n")
+            # for i in range(num_route):
+            #     print(f"Truck {i}")
+            #     print(self.bestSolution.routes[i])
+                # nodes = self.currentSolution.routes[i].nodes
+                # for m in nodes:
+                #     print(m)
+                # print("")
                 
     
     

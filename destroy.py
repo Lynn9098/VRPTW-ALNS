@@ -25,7 +25,7 @@ class Destroy:
             cus = randomGen.choice(self.solution.served)
             if cus != None:
                 self.solution.removeCustomer(cus)
-        
+        # TODO here: need to adjust time window after removal ... 
     
     def __str__(self):
         return str(self.solution)
