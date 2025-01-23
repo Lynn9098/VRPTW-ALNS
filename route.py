@@ -1,5 +1,5 @@
 import sys
-
+import copy
 
 class Route:
     def __init__(self, instance, nodes, nodesSet):
@@ -34,12 +34,12 @@ class Route:
             else:
                 self.forwardTimeSlack[i] = min(self.forwardTimeSlack[i + 1] + self.nodes[i + 1].waitingTime, self.nodes[i].dueTime - self.nodes[i].serviceStartTime)
 
-
     def isFeasible(self):
         """check if the route is feasible
         """
         # check if the route starts and ends at depot 
-        if self.nodes[0] != self.instance.depot or self.nodes[-1] != self.instance.depot:
+        if self.nodes[0].id != 0 or self.nodes[-1].id != 0:
+            print("Head & Tail")
             return False
         curTime = 0 # record current time
         curLoad = 0 # record load in vehicle 
@@ -47,7 +47,9 @@ class Route:
             preID, postID = self.nodes[i - 1].id, self.nodes[i].id
             curTime += self.instance.distMatrix[preID][postID]
             if curTime > self.nodes[i].dueTime:
-                print("Break time window!!")
+                print(f"Cus {self.nodes[i].id} Break time window!!, {len(self.nodes)}")
+                for node in self.nodes:
+                    print(node)
                 return False
             curTime = max(curTime, self.nodes[i].readyTime) + self.nodes[i].serviceTime
             curLoad += self.nodes[i].demand
@@ -85,77 +87,108 @@ class Route:
         if customer not in self.nodesSet:
             print("WARNING! Trying to remove a non-existing customer!")
             return
-        self.adjustTW(customer)
+
+        del_cus_idx = self.nodes.index(customer)
         self.nodesSet.remove(customer)
-        self.nodes.remove(customer)
+        self.nodes.pop(del_cus_idx)
+        
+        for j in range(del_cus_idx, len(self.nodes) - 1):
+            prevNode = self.nodes[j - 1]
+            curArrivalTime = self.nodes[j - 1].serviceStartTime + \
+                self.instance.distMatrix[self.nodes[j - 1].id][self.nodes[j].id] + \
+                self.nodes[j - 1].serviceTime
+            self.nodesSet.remove(self.nodes[j])
+            self.nodes[j].serviceStartTime = max(curArrivalTime, self.nodes[j].readyTime)
+            # print(f"{j} {self.nodes[j].serviceStartTime}")
+            self.nodes[j].waitingTime = max(0, self.nodes[j].readyTime - (self.instance.distMatrix[prevNode.id][self.nodes[j].id] + prevNode.serviceStartTime + prevNode.serviceTime))
+            self.nodesSet.add(self.nodes[j])
     
-    def adjustTW(self, customer):
-        """An efficient way to adjust the start service timestamp, together with the distance of the route:
-        following :https://mp.weixin.qq.com/s/rcnppKJLegzCirictTItFA
+    def adjustTW(self, index):
+        """adjust time windows afterwards
 
         Args:
-            customer (_type_): _description_
+            index (_type_): _description_
         """
-        rmvCusIdx = self.nodes.index(customer)
-        prevIdx = rmvCusIdx - 1; postIdx = rmvCusIdx + 1
-        # get the previous node and the post node
-        postNode = self.nodes[postIdx]
-        postServiceStartTime = postNode.serviceStartTime
-        self.distance -= (self.instance.distMatrix[self.nodes[prevIdx].id][customer.id] + \
-            self.instance.distMatrix[customer.id][self.nodes[postIdx].id] - self.instance.distMatrix[self.nodes[prevIdx].id][self.nodes[postIdx].id])
-        
-        if postServiceStartTime == postNode.readyTime:
-            # No need to adjust the time windows
-            print("No need to adjust!")
-            return
-        else:
-            # need to adjust the service time of nodes afterwards ... 
-            for j in range(rmvCusIdx, len(self.nodes) - 1):
-                curServiceStartTime = self.nodes[prevIdx].serviceStartTime + \
-                    self.instance.distMatrix[self.nodes[prevIdx].id][self.nodes[j].id] + \
-                    self.nodes[prevIdx].serviceTime
-                # print(self.nodes[j])
-                self.nodesSet.remove(self.nodes[j])
-                self.nodes[j].serviceStartTime = max(curServiceStartTime, self.nodes[j].readyTime)
-                self.nodesSet.add(self.nodes[j])
-                prevIdx = j
-        return 
+        prevNode = self.nodes[index - 1]
+        currNode = self.nodes[index]
+        succNode = self.nodes[index + 1]
+        self.distance -= (
+            self.instance.distMatrix[prevNode.id][currNode.id] + self.instance.distMatrix[currNode.id][succNode.id] - \
+            self.instance.distMatrix[prevNode.id][succNode.id])
+        for i in range(index, len(self.nodes) - 1):
+            prevNode = self.nodes[i - 1]
+            currNode = self.nodes[i]
+            curArrivalTime = prevNode.serviceStartTime + self.instance.distMatrix[prevNode.id][currNode.id] + prevNode.serviceTime
+            self.nodesSet.remove(self.nodes[i])
+            self.nodes[i].serviceStartTime = max(curArrivalTime, self.nodes[i].readyTime)
+            self.nodes[i].waitingTime = max(0, currNode.readyTime - (self.instance.distMatrix[prevNode.id][currNode.id] + prevNode.serviceStartTime + prevNode.serviceTime))
+            self.nodesSet.add(self.nodes[i])
+            
+        return
     
     def greedyInsert(self, customer):
-        """Greedy insert the customer into this route .. 
+        """Greedily insert the customer into this route .. 
 
         Args:
             customer (node): node of customers ...
         """
-        nodesSetCopy = self.nodesSet.copy()
+        nodesSetCopy = self.nodesSet
         nodesSetCopy.add(customer)
         bestInsert = None # record the best insertion result ...
+        bestInsertIdx = None
         minCost = sys.maxsize 
         
         # iterate over all possible locations for insertion ... 
+        # if customer.id == 13:
+        #     print("SECOND CHECK")
+        #     # [129.0, 79, 57, 44.88275723137633, 44.88275723137633, 105.67338451907767]
+        #     for node in self.nodes:
+        #         print(node)
         for i in range(1, len(self.nodes)):
-            prevNodeId = self.nodes[i - 1].id
-            succNodeId = self.nodes[i].id
-            newServiceStartTime = max(customer.readyTime, self.nodes[i - 1].serviceStartTime + self.nodes[i - 1].serviceTime + self.instance.distMatrix[prevNodeId][customer.id])
+            prevNode = self.nodes[i - 1]
+            succNode = self.nodes[i]
+            newServiceStartTime = max(customer.readyTime,  prevNode.serviceStartTime + prevNode.serviceTime + self.instance.distMatrix[prevNode.id][customer.id])
+            # if self.nodes[1].id == 24 and customer.id == 73:
+            #     print(f"EHRE {i}")
+            #     for k in self.nodes:
+            #         print(k)
             if newServiceStartTime > customer.dueTime or \
-                newServiceStartTime + customer.serviceTime + self.instance.distMatrix[customer.id][succNodeId] - self.nodes[i].serviceStartTime >  self.forwardTimeSlack[i]:
+                newServiceStartTime + customer.serviceTime + self.instance.distMatrix[customer.id][succNode.id] - self.nodes[i].serviceStartTime >  self.forwardTimeSlack[i] \
+                or customer.demand + self.load > self.instance.capacity:
                 continue
-            # otherwise: can be inserted into this position ... 
-            costIncrement = self.instance.distMatrix[prevNodeId][customer.id] + self.instance.distMatrix[customer.id][succNodeId]
+
+            costIncrement = self.instance.distMatrix[prevNode.id][customer.id] + self.instance.distMatrix[customer.id][succNode.id]
+
             if costIncrement < minCost:
                 minCost = costIncrement
-                routeCopy = self.nodes.copy()
-                # forge the new nodes list ...
-                routeCopy.insert(i, customer)
+                tempCus = copy.deepcopy(customer)
+                tempCus.serviceStartTime = newServiceStartTime
+                tempCus.waitingTime = max(0, tempCus.readyTime - newServiceStartTime)
+                routeCopy = copy.deepcopy(self.nodes) # VERY IMPORTANT
+                routeCopy.insert(i, tempCus)
                 bestInsert = routeCopy
-        bestRoute = Route(self.instance, bestInsert, nodesSetCopy)
-        bestRoute.adjustTW(customer)
-        bestRoute.forgePushForward()
-        return bestRoute, minCost
+                bestInsertIdx = i
+
+            
+        if bestInsert is not None:
+            bestRoute = Route(self.instance, bestInsert, set(bestInsert))
+            bestRoute.adjustTW(bestInsertIdx)
+            bestRoute.forgePushForward()
+            # if customer.id == 71:
+            #     print("I GUESS THIS IS FAILED!")
+            #     # print(bestInsert)
+            #     for node in bestInsert:
+            #         print(node)
+            return bestRoute, minCost
+        else:
+            return None, minCost
         
     
     def copy(self):
         nodesCopy = self.nodes.copy()
         nodesSetCopy = self.nodesSet.copy()
-        return Route(self.instance, nodesCopy, nodesSetCopy)
+        nodesForwardTimeSlackCopy = self.forwardTimeSlack.copy()
+        newRoute = Route(self.instance, nodesCopy, nodesSetCopy)
+        newRoute.forwardTimeSlack = nodesForwardTimeSlackCopy
+        return newRoute
     

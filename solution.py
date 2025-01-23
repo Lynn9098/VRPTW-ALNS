@@ -16,8 +16,8 @@ class Solution:
         return self.distance
     
     def executeForwardSlack(self):
-        for route in self.routes:
-            route.forgePushForward()
+        for i in range(len(self.routes)):
+            self.routes[i].forgePushForward()
     
     def executeTimeNN(self):
         """Time-oriented NN in Solomon 1987, inital solution construction
@@ -90,11 +90,16 @@ class Solution:
     def removeCustomer(self, customer):
         deleteRoute = False 
         # judge whether to delete current route ... 
-        for route in self.routes:
-            if customer in route.nodesSet:
+        for i in range(len(self.routes)):
+            if customer in self.routes[i].nodesSet:
+                print(f"Remove customer {customer.id}")
                 # find it in this route... remove it
-                # print(f"remove cus {customer.id}")
-                route.removeCustomer(customer)
+                if len(self.routes[i].nodes) == 3:
+                    # this is the last customer of the route ... 
+                    self.routes.remove(self.routes[i])
+                    break
+                self.routes[i].removeCustomer(customer)
+                self.routes[i].forgePushForward()
                 break
         
         self.served.remove(customer)
@@ -140,3 +145,4 @@ class Solution:
         newCopy = Solution(self.instance, routesCopy, self.served.copy(), self.notServed.copy())
         newCopy.computeDistance()
         return newCopy
+

@@ -4,8 +4,8 @@ from visualizer import Visualizer
 
 if __name__ == "__main__":
     # 跑通一个case的
-    folder = "./benchmark/Solomon/"
-    instList = ["c101.txt"]
+    folder = "./benchmark/Gehring&Homberge/"
+    instList = ["C1_2_1.TXT"]
     for inst in instList:
         fileName = folder + inst
         curInstance = Instance.readInstance(fileName)

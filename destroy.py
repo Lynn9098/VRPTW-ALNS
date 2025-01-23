@@ -19,13 +19,16 @@ class Destroy:
     def executeRandomRemoval(self, nRemoval, randomGen):
         """Random removal operator
         """
-        for i in range(nRemoval):
+        for _ in range(nRemoval):
             if len(self.solution.served) == 0:
                 break
             cus = randomGen.choice(self.solution.served)
             if cus != None:
                 self.solution.removeCustomer(cus)
-        # TODO here: need to adjust time window after removal ... 
+            # if cus.id == 5:
+            #     print("CHECK RIGHTNESS")
+            #     for node in self.solution.routes[0].nodes:
+            #         print(node)
     
     def __str__(self):
         return str(self.solution)
