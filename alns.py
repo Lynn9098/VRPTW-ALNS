@@ -4,6 +4,7 @@ from solution import Solution
 from destroy import Destroy
 from repair import Repair
 from parameters import Parameters
+import copy
 
 class ALNS:
     """
@@ -25,25 +26,38 @@ class ALNS:
         self.constructInitialSolution()
         endtime = time.time()
         cpuTime = round(endtime - starttime, 3)
-        
+
         print(f"Terminated! CPU times {cpuTime} seconds")
-        
-        self.tempSolution = self.currentSolution.copy()
-        
-        print(self.tempSolution.distance)
+        # cnt = 0
+        self.tempSolution = copy.deepcopy(self.currentSolution)
+        for cnt in range(5000):
+
+            self.tempSolution = copy.deepcopy(self.currentSolution)
+            destroySolution = Destroy(self.instance, self.tempSolution)
+
+            destroySolution.executeRandomRemoval(10, self.randomGen)
+
+            # if len(destroySolution.solution.served) + len(destroySolution.solution.notServed) != 100:
+            #     print("FAIL!!!")
+            #     for node in destroySolution.solution.served:
+            #         if node in destroySolution.solution.notServed:
+            #             print(node)
+            #     print("FAIL!!!")
+            #     break
+            # print("Destroyed: " + str(destroySolution.solution.distance))
             
-        destroySolution = Destroy(self.instance, self.tempSolution)
+            tempSolution2 = destroySolution.solution.copy() # This is very important! deepcopy...
+            repairSolution = Repair(self.instance, tempSolution2)
+            repairSolution.executeGreedyInsertion(self.randomGen)
 
-        destroySolution.executeRandomRemoval(70, self.randomGen)
-
-        tempSolution2 = destroySolution.solution.copy()
+            if self.currentSolution.distance - repairSolution.solution.distance >= 1e-3:
+                if len(repairSolution.solution.routes) > len(self.currentSolution.routes):
+                    continue
+                self.currentSolution = repairSolution.solution
+                print(f"Found!! Obj: {repairSolution.solution.distance}, cnt : {cnt} , trucks: {len(repairSolution.solution.routes)} complete! ")
         
-        repairSolution = Repair(self.instance, tempSolution2)
-        
-        repairSolution.executeGreedyInsertion(self.randomGen)
-
-        self.tempSolution = repairSolution.solution
-            # self.display(isbest= False)
+        if self.currentSolution.checkFeasibility():
+            print("Pass Feasibility Check!")
         
     
     def constructInitialSolution(self):
@@ -52,14 +66,8 @@ class ALNS:
         # 1. based on Solomon's time-oriented Nearest Neighbur Heuristic 
         self.currentSolution = Solution(self.instance, list(), list(), self.instance.customers.copy())
         self.currentSolution.executeTimeNN()
-        self.currentSolution.executeForwardSlack()
-        # for route in self.currentSolution.routes:
-        #     print(route.forwardTimeSlack)
-        self.bestSolution = self.currentSolution.copy()
-        # test = [-1 for _ in range(101)]
-        # for route in self.bestSolution.routes:
-        #     print(route.forwardTimeSlack)
-        print(f"Total trucks: { len(self.currentSolution.routes) }")
+        # 2. based on each route per customer ...
+        # self.currentSolution.executeNaive()
 
 
     def display(self, isbest = True):

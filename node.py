@@ -1,7 +1,7 @@
 import math
 
 class Node:
-    def __init__(self, id, x, y, demand, readyTime, dueTime, serviceTime, serviceStartTime = 0, waitingTime = 0):
+    def __init__(self, id, x, y, demand, readyTime, dueTime, serviceTime):
         self.id = id
         self.x = x
         self.y = y
@@ -9,11 +9,11 @@ class Node:
         self.readyTime = readyTime
         self.dueTime = dueTime
         self.serviceTime = serviceTime
-        self.serviceStartTime = serviceStartTime
-        self.waitingTime = waitingTime
+        # self.serviceStartTime = serviceStartTime
+        # self.waitingTime = waitingTime
     
     def __str__(self):
-        return (f"Node id: {self.id}; location: ({self.x},{self.y}) demand: {self.demand}; readyTime: {self.readyTime}; dueTime: {self.dueTime}; serviceTime:{self.serviceTime}; serviceStartTime: {self.serviceStartTime}; waitingTime :{self.waitingTime}")
+        return (f"Node id: {self.id}; location: ({self.x},{self.y}) demand: {self.demand}; readyTime: {self.readyTime}; dueTime: {self.dueTime}; serviceTime:{self.serviceTime}; ")
 
     def getDistance(p1, p2):
         """Calculate the eculidean distance between p1 and p2

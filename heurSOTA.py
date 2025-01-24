@@ -5,7 +5,8 @@ from node import Node
 
 if __name__ == "__main__":
     folder = "./benchmark/Solomon/"
-    instList = ["r102.txt"]
+    folder = "./benchmark/Gehring&Homberge/"
+    instList = ["C1_2_1.txt"]
     COORDS = []
     DEMANDS = []
     DURATION_MATRIX = []

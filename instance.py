@@ -20,7 +20,6 @@ class Instance:
         self.capacity = capacity
         self.depot = depot
         self.customers = customers 
-
         self.distMatrix = np.zeros((len(self.customers) + 1, len(self.customers) + 1))  # distance matrix
         # save all nodes 
         self.allNodes = [depot] + customers
@@ -77,8 +76,9 @@ class Instance:
             else:
                 i += 1
         
-        for cus in customers[:5]:
-            print(cus)
+        # Test output...
+        # for cus in customers[:5]:
+        #     print(cus)
 
         return Instance(fileName, numVehicle, capacity, depot, customers)
         
