@@ -30,15 +30,16 @@ class ALNS:
         print(f"Terminated! CPU times {cpuTime} seconds")
         # cnt = 0
         self.tempSolution = copy.deepcopy(self.currentSolution)
-        totalIter = 2000
+        totalIter = 10000
         # print(self.tempSolution)
         for cnt in range(totalIter):
             
-            # removaln = self.randomGen.randint(5, 12)
+            # removaln = 4
+            removaln = self.randomGen.randint(3, int(0.1 * self.instance.numNodes - 1))
             self.tempSolution = copy.deepcopy(self.currentSolution)
             destroySolution = Destroy(self.instance, self.tempSolution)
 
-            destroySolution.executeRandomRemoval(4, self.randomGen)
+            destroySolution.executeRandomRemoval(removaln, self.randomGen)
             tempSolution2 = destroySolution.solution.copy() # This is very important! 
             repairSolution = Repair(self.instance, tempSolution2)
             # repairSolution.executeGreedyInsertion(self.randomGen)
@@ -51,18 +52,18 @@ class ALNS:
                 self.currentSolution = repairSolution.solution
                 print(f"Found!! Obj: {repairSolution.solution.distance}, cnt : {cnt} , trucks: {len(repairSolution.solution.routes)} complete! ")
             
-            # if cnt < totalIter:
-            #     self.tempSolution = copy.deepcopy(self.currentSolution)
-            #     destroySolution = Destroy(self.instance, self.tempSolution)
-            #     destroySolution.executeEntireRouteRemoval(self.randomGen)
-            #     originalFleetSize = len(destroySolution.solution.routes)
-            #     tempSolution2 = destroySolution.solution.copy() # This is very important! 
-            #     repairSolution = Repair(self.instance, tempSolution2)
-            #     repairSolution.executeMultiGreedyInsertion(self.randomGen)
-            #     # print(len(repairSolution.solution.routes), originalFleetSize, end = "/|")
-            #     if len(repairSolution.solution.routes) <= originalFleetSize:
-            #         self.currentSolution = repairSolution.solution
-            #         print(f"Found Shorter Route!!! Obj: {repairSolution.solution.distance}, cnt : {cnt} , trucks: {len(repairSolution.solution.routes)} complete! ")
+            if cnt < totalIter * 0.2:
+                self.tempSolution = copy.deepcopy(self.currentSolution)
+                destroySolution = Destroy(self.instance, self.tempSolution)
+                destroySolution.executeEntireRouteRemoval(self.randomGen)
+                originalFleetSize = len(destroySolution.solution.routes)
+                tempSolution2 = destroySolution.solution.copy() # This is very important! 
+                repairSolution = Repair(self.instance, tempSolution2)
+                repairSolution.executeMultiGreedyInsertion(self.randomGen)
+                # print(len(repairSolution.solution.routes), originalFleetSize, end = "/|")
+                if len(repairSolution.solution.routes) <= originalFleetSize:
+                    self.currentSolution = repairSolution.solution
+                    print(f"Found Shorter Route!!! Obj: {repairSolution.solution.distance}, cnt : {cnt} , trucks: {len(repairSolution.solution.routes)} complete! ")
                     
                 
 

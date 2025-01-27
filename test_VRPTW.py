@@ -4,7 +4,8 @@ import math
 import time
 import os
 import pandas as pd
-
+# NOTE: Temperal file, to avoid git conflict and protect file
+# TODO: Delete it when completed.
 class Customer:
     def __init__(self, idx, demand, ready_time, due_time, service_time, x, y):
         self.idx = idx
@@ -479,7 +480,7 @@ random.seed(12138)
 results=[]
 filePath = "./benchmark/Gehring&Homberge/"
 #instances_vrptw=os.listdir(filePath)
-instances_vrptw=['R1_2_4.txt']#,'r102.txt','r103.txt']#,'r104.txt','r105.txt','r106.txt',
+instances_vrptw=['R2_6_2.txt']#,'r102.txt','r103.txt']#,'r104.txt','r105.txt','r106.txt',
                  #'r107.txt','r108.txt','r109.txt','r110.txt','r111.txt','r112.txt',]
 for instance_name in instances_vrptw:
     start = time.time()

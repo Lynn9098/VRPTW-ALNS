@@ -27,6 +27,15 @@ class Destroy:
                 self.solution.removeCustomer(cus)
         self.solution.distance = self.solution.computeDistance()
     
+    def executeWorseRemoval(self, nRemoval, randomGen):
+        """Worse case removal ... 
+
+        Args:
+            nRemoval (_type_): _description_
+            randomGen (_type_): _description_
+        """
+        pass
+    
     def executeStringRemoval(self, nRemoval, randomGen):
         """_summary_
 
