@@ -107,7 +107,46 @@ class Solution:
             route.calculateTime()
             route.forgePushForward()
             self.distance += route.distance
-                
+    
+    def executeCWsaving(self, randomGen):
+        
+        randomGen.shuffle(self.notServed)
+        for v_id in range(self.instance.numVehicle):
+            # iter num of vehicles ... 
+            routeList = [self.instance.depot]
+            prevServiceStartTime = 0
+            currLoad = 0
+            while self.notServed:
+                # 
+                nextCustomer = None
+                bestScore = float('inf')
+                prevNode = routeList[-1]
+                currArrivalTime = 0
+                for customer in self.notServed:
+                    arriveTime = prevServiceStartTime + prevNode.serviceTime + self.instance.distMatrix[prevNode.id][customer.id]
+                    if arriveTime > customer.dueTime or currLoad + customer.demand > self.instance.capacity:
+                        # break time window or weight constraint ... 
+                        continue 
+                    currCustomerScore = self.instance.distMatrix[prevNode.id][customer.id] + max(0, customer.readyTime - arriveTime)
+                    if currCustomerScore < bestScore:
+                        bestScore = currCustomerScore
+                        nextCustomer = customer
+                        currArrivalTime = arriveTime
+                if nextCustomer == None:
+                    # no feasible customer ...
+                    break
+                routeList.append(nextCustomer)
+                currLoad += nextCustomer.demand
+                prevServiceStartTime = max(currArrivalTime, nextCustomer.readyTime)
+                self.notServed.remove(nextCustomer)
+                self.served.append(nextCustomer)
+            routeList.append(self.instance.depot)
+            if len(routeList) > 2:
+                self.routes.append(Route(self.instance, routeList, set(routeList)))
+                self.distance += self.routes[-1].distance
+        pass
+    
+    
     def removeCustomer(self, customer):
         # remove customer from Solution ... 
         # executed = False
@@ -137,6 +176,19 @@ class Solution:
         self.served.remove(customer)
         self.notServed.append(customer)
 
+    def removeRoute(self, routeIdx):
+        """remove route from solution and update ... 
+
+        Args:
+            routeIdx (_type_): _description_
+        """
+        for customer in self.routes[routeIdx].nodesSet:
+            if customer.id != 0:
+                self.served.remove(customer)
+                self.notServed.append(customer)
+                # remove from set 
+        self.routes.pop(routeIdx)
+    
     def __str__(self):
         # num_route = len(self.routes)
         cnt_customers = 0

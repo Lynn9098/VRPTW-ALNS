@@ -5,8 +5,10 @@ from visualizer import Visualizer
 if __name__ == "__main__":
     # 跑通一个case的
     folder = "./benchmark/Gehring&Homberge/"
+    instList = ["R1_2_4.txt"]
     # folder = "./benchmark/Solomon/"
-    instList = ["C1_2_1.txt"]
+    # instList = ["c101.txt"]
+    
     for inst in instList:
         fileName = folder + inst
         curInstance = Instance.readInstance(fileName)
