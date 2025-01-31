@@ -31,6 +31,8 @@ class Instance:
                     continue
                 else:
                     self.distMatrix[i][j] = Node.getDistance(self.allNodes[i], self.allNodes[j])
+        self.adjDistMatrix = np.argsort(self.distMatrix, axis=1).tolist() # matrix for string removal
+
     
     def readInstance(fileName):
         with open(fileName, 'r') as f:

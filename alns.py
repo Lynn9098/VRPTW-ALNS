@@ -20,6 +20,8 @@ class ALNS:
     def __init__(self, instance):
         self.instance = instance
         self.randomGen = random.Random(Parameters.randomSeed) # for reproducibility
+        self.avgCusRmved = Parameters.avgCusRmved
+        self.maxStringLen = Parameters.maxStringLen
 
     def execute(self):
         starttime = time.time()
@@ -31,48 +33,20 @@ class ALNS:
         # cnt = 0
         self.tempSolution = copy.deepcopy(self.currentSolution)
         totalIter = 10000
-        # print(self.tempSolution)
+            
         for cnt in range(totalIter):
             
-            # removaln = 4
+            # print(f"Iter {cnt}")
             removaln = self.randomGen.randint(3, int(0.1 * self.instance.numNodes - 1))
-            self.tempSolution = copy.deepcopy(self.currentSolution)
-            destroySolution = Destroy(self.instance, self.tempSolution)
-
-            destroySolution.executeRandomRemoval(removaln, self.randomGen)
-            tempSolution2 = destroySolution.solution.copy() # This is very important! 
-            repairSolution = Repair(self.instance, tempSolution2)
-            # repairSolution.executeGreedyInsertion(self.randomGen)
-            repairSolution.executeMultiGreedyInsertion(self.randomGen)
-            # print(len(tempSolution2.notServed), end = " ")
-            # print(len(repairSolution.solution.served), end = "/|")
-            if self.currentSolution.distance - repairSolution.solution.distance >= 1e-3:
-                if len(repairSolution.solution.routes) > len(self.currentSolution.routes):
-                    continue
-                self.currentSolution = repairSolution.solution
-                print(f"Found!! Obj: {repairSolution.solution.distance}, cnt : {cnt} , trucks: {len(repairSolution.solution.routes)} complete! ")
+            repairSolution = self.destroyAndRepair(1, 1, removaln)
+            self.ifAccept(repairSolution, cnt)
             
             if cnt < totalIter * 0.2:
-                self.tempSolution = copy.deepcopy(self.currentSolution)
-                destroySolution = Destroy(self.instance, self.tempSolution)
-                destroySolution.executeEntireRouteRemoval(self.randomGen)
-                originalFleetSize = len(destroySolution.solution.routes)
-                tempSolution2 = destroySolution.solution.copy() # This is very important! 
-                repairSolution = Repair(self.instance, tempSolution2)
-                repairSolution.executeMultiGreedyInsertion(self.randomGen)
-                # print(len(repairSolution.solution.routes), originalFleetSize, end = "/|")
-                if len(repairSolution.solution.routes) <= originalFleetSize:
-                    self.currentSolution = repairSolution.solution
-                    print(f"Found Shorter Route!!! Obj: {repairSolution.solution.distance}, cnt : {cnt} , trucks: {len(repairSolution.solution.routes)} complete! ")
-                    
-                
-
+                self.executeFleetMin(cnt)
             
-        
-        if self.currentSolution.checkFeasibility():
-            print("Pass Feasibility Check!")
+        self.currentSolution.checkFeasibility()
+            # print("Pass Feasibility Check!")
             # print(self.currentSolution)
-        
     
     def constructInitialSolution(self):
         """Construct the initial solution
@@ -82,26 +56,79 @@ class ALNS:
         # self.currentSolution.executeTimeNN()
         # 2. based on each route per customer ...
         # self.currentSolution.executeNaive()
-        # 3. based on C-W saving Heuristic
+        # 3. based on C-W saving Heuristic (seems very efficient!)
         self.currentSolution.executeCWsaving(self.randomGen)
 
 
     def display(self, isbest = True):
+        """Display the current Solution.
+
+        Args:
+            isbest (bool, optional): _description_. Defaults to True.
+        """
         if isbest:
             print(self.bestSolution)
-
         else:
             print(self.currentSolution)
-            
                 
     
-    
-    def destroyAndRepair(self, destroyOptNo, repairOptNo, size):
-        # depict the destroy and repair process ... 
-        self.tempSolution = self.currentSolution.copy()
+    def executeFleetMin(self, iterNum = 0):
+        """Fleet Minimization Procedure: Remove entire route and 
+        check if all customers it served can be inserted to other routes
+
+        Args:
+            iterNum (int, optional): Current Iteration Number. Defaults to 0.
+        """
+        self.tempSolution = copy.deepcopy(self.currentSolution)
         destroySolution = Destroy(self.instance, self.tempSolution)
-        destroySolution.executeRandomRemoval(size, self.randomGen)
-        print("...")
-        print(destroySolution)
+        destroySolution.executeEntireRouteRemoval(self.randomGen)
+        originalFleetSize = len(destroySolution.solution.routes)
+        tempSolution2 = destroySolution.solution.copy() # This is very important! 
+        repairSolution = Repair(self.instance, tempSolution2)
+        repairSolution.executeMultiGreedyInsertion(self.randomGen)
+        if len(repairSolution.solution.routes) <= originalFleetSize:
+            self.currentSolution = repairSolution.solution
+            print(f"Found Shorter Route!!! Obj: {repairSolution.solution.distance}, IterNum : {iterNum} , trucks: {len(repairSolution.solution.routes)} complete! ")
+
+    
+    def destroyAndRepair(self, destroyOptNo, repairOptNo, removaln):
+        """To conduct a full Destroy and Repair Procedure ... 
+
+        Args:
+            destroyOptNo (_type_): _description_
+            repairOptNo (_type_): _description_
+            removaln (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        # TODO: test it ... 
+        # depict the destroy and repair process ... 
+        self.tempSolution = copy.deepcopy(self.currentSolution)
+        destroySolution = Destroy(self.instance, self.tempSolution)
+        if destroyOptNo == 1:
+            destroySolution.executeRandomRemoval(removaln, self.randomGen)
+        
+        tempSolution2 = destroySolution.solution.copy() # This is very important! 
+        repairSolution = Repair(self.instance, tempSolution2)
+        
+        if repairOptNo == 1:
+            repairSolution.executeMultiGreedyInsertion(self.randomGen)
+        
+        return repairSolution
+    
         
     
+    def ifAccept(self, repairSolution, iterNum = 0):
+        """check if this repaired solution should be accepted
+
+        Args:
+            repairSolution (Class Repair): the repaired solution.
+            iterNum (int, optional): iteration number. Defaults to 0.
+        """
+        if self.currentSolution.distance - repairSolution.solution.distance >= 1e-3:
+            if len(repairSolution.solution.routes) > len(self.currentSolution.routes):
+                return
+            self.currentSolution = repairSolution.solution
+            print(f"Found!! Obj: {repairSolution.solution.distance}, IterNum : {iterNum} , trucks: {len(repairSolution.solution.routes)} complete! ")
+            

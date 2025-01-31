@@ -5,9 +5,10 @@ from visualizer import Visualizer
 if __name__ == "__main__":
     # 跑通一个case的
     folder = "./benchmark/Gehring&Homberge/"
-    instList = ["R2_6_3.txt"]
+    instList = ["C2_6_3.txt"]
+    # test list : C2_6_3.txt (checked)
     # folder = "./benchmark/Solomon/"
-    # instList = ["c101.txt"]
+    # instList = ["c105.txt"]
     
     for inst in instList:
         fileName = folder + inst

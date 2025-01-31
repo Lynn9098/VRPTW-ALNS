@@ -36,14 +36,88 @@ class Destroy:
         """
         pass
     
-    def executeStringRemoval(self, nRemoval, randomGen):
+    def executeStringRemoval(self, nRemoval, avgCusRmvd, maxStringLen, randomGen):
         """_summary_
 
         Args:
             nRemoval (_type_): _description_
             randomGen (_type_): _description_
         """
+        routeNodes = [len(route.nodes) - 2 for route in self.solution.routes]
+        avgNodesPerRoute = sum(routeNodes) // len(self.solution.routes)
+        # record average number of nodes per route
+        maxNodesOfRoute = max(routeNodes)
+        # record maximum number of nodes served by a route
+        l_max_s = min(maxStringLen, avgNodesPerRoute)
+        # max string length. cannot totally remove a route ?
+        k_max_s = (4 * avgCusRmvd) / (1 + l_max_s) - 1
+        # the maximum number of strings
+        k_s = int(randomGen.uniform(1, k_max_s + 1))
+        # the number of strings to be removed for this solution ... 
+        cus_seed = randomGen.choice(self.solution.served)
+        # find the seed customer where the string removal begins
+        visitedCusId = set()
+        # to restore deleted customers id that have been removed ...
+        cusEnRouteList = [-1 for _ in range(self.instance.numNodes)]
+        enRouteCusDict = dict()
+        enRouteCusSeqDict = dict()
+        # record the following: 
+        # 1. the route of each customer,  
+        # 2. the customers each route served ... 
+        # 3. the sequence of customers each route served ...
+        for idx, route in enumerate(self.instance.routes):
+            enRouteCusDict[idx] = []
+            enRouteCusSeqDict[idx] = []
+            for node in route.nodes:
+                if node.id != 0:
+                    cusEnRouteList[node.id] = idx
+                    enRouteCusDict[idx].append(node.id)
+                enRouteCusSeqDict[idx].append(node.id)
+        
+        for nodeId in enRouteCusDict[cusEnRouteList[cus_seed.id]]:
+            visitedCusId.add(nodeId)
+            # keep track of visited customers ... 
+        
+        for i in range(k_s):
+            # need to remove k_s routes ... 
+            for customer_id in self.instance.adjDistMatrix[cus_seed.id]:
+                # iterate over all nodes ... 
+                if customer_id in visitedCusId:
+                    # if the customer has been visited, skip it ... 
+                    continue
+                else:
+                    # if the customer has not been visited, add it to the visited list ... 
+                    # this tour is the next string ... 
+                    # determine the l_max_t, l_t (removed string length)
+                    l_max_t = min(len(enRouteCusDict[cusEnRouteList[cus_seed.id]]), l_max_s)
+                    l_t = int(randomGen.uniform(1, l_max_t + 1))
+                pass
+            pass
+        
+        
         pass
+    
+    def chooseCusViaString(self, cusId, cusSeq, rmvLen, randomGen):
+        """Given cus seq, targeted_cus_id, choose cus via string
+
+        Args:
+            cusId (_type_): _description_
+            cusSeq (_type_): _description_
+            randomGen (_type_): random generator
+        """
+        
+        validSubLists = []
+        for i in range(len(cusSeq) - rmvLen + 1):
+            cusIdList = cusSeq[i: i + rmvLen]
+            if cusId in cusIdList and 0 not in cusIdList:
+                # check if the string satisfy ... 
+                validSubLists.append([k for k in range(i, i + rmvLen)])
+            # pass
+        if len(validSubLists) > 0:
+            return randomGen.choice(validSubLists)
+        else:
+            return []
+        
     
     def executeShawRemoval(self, nRemoval, randomGen):
         """Shaw removal
@@ -58,7 +132,6 @@ class Destroy:
         timeWindowRelateness = [0 for _ in range(self.instance.numNodes - 1)]
         loadRelateness = [0 for _ in range(self.instance.numNodes - 1)]
         distanceRelateness = [0 for _ in range(self.instance.numNodes - 1 )]
-        
         pass
     
     def executeEntireRouteRemoval(self, randomGen):

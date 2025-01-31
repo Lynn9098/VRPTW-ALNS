@@ -75,8 +75,6 @@ class Solution:
                 nxtCus = None; nxtRate = float('inf'); nxtCusIdx = -1
                 for nextIdx, nextCus in enumerate(self.notServed):
                     # check feasibility
-                    # if nextCus.id == 3:
-                    #     print(lastRoute.serviceStartTime[-2] , lastCustomer.serviceTime , self.instance.distMatrix[lastCustomer.id][nextCus.id])
                     if lastRoute.serviceStartTime[-2] + lastCustomer.serviceTime + self.instance.distMatrix[lastCustomer.id][nextCus.id] > nextCus.dueTime:
                         continue
                     if lastRoute.load + nextCus.demand > self.instance.capacity:
@@ -117,7 +115,6 @@ class Solution:
             prevServiceStartTime = 0
             currLoad = 0
             while self.notServed:
-                # 
                 nextCustomer = None
                 bestScore = float('inf')
                 prevNode = routeList[-1]
@@ -127,6 +124,10 @@ class Solution:
                     if arriveTime > customer.dueTime or currLoad + customer.demand > self.instance.capacity:
                         # break time window or weight constraint ... 
                         continue 
+                    actualServiceStartTime = max(customer.readyTime, arriveTime)
+                    if actualServiceStartTime + self.instance.distMatrix[customer.id][0] + customer.serviceTime > self.instance.depot.dueTime:
+                        # IMPORTANT FIX: If all satistied but fail to reach depot before due time ... 
+                        continue
                     currCustomerScore = self.instance.distMatrix[prevNode.id][customer.id] + max(0, customer.readyTime - arriveTime)
                     if currCustomerScore < bestScore:
                         bestScore = currCustomerScore
@@ -144,7 +145,6 @@ class Solution:
             if len(routeList) > 2:
                 self.routes.append(Route(self.instance, routeList, set(routeList)))
                 self.distance += self.routes[-1].distance
-        pass
     
     
     def removeCustomer(self, customer):
@@ -165,17 +165,20 @@ class Solution:
                 # print(f"length of nodes after: {len(self.routes[i].nodes)}")
                 break
             
-                
-        # if not executed:
-        #     print(f"WRONG!! {str(customer)}") 
-        #     print(self)
-        #     print("+++++")
-        #     for node in self.routes[13].nodesSet:
-        #         print(node == customer, node, customer)
         
         self.served.remove(customer)
         self.notServed.append(customer)
 
+    def removeRouteString(self, routeIdx, customerIdx):
+        """Remove a string of customers from route with routeIdx via customerIdx
+
+        Args:
+            routeIdx (_type_): _description_
+            customerIdx (_type_): _description_
+        """
+        # TODO here ... 
+        pass
+    
     def removeRoute(self, routeIdx):
         """remove route from solution and update ... 
 
@@ -239,6 +242,11 @@ class Solution:
             elif visited[i] < 1:
                 print(f"Cus {i} is not visited!")
                 isFeas = False
+
+        if isFeas:
+            print("Success!! Pass Feasibility Check!")
+        else:
+            print("Fail!! Check reasons above!")
         return isFeas
     
     def copy(self):

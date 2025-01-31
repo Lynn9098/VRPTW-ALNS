@@ -56,7 +56,7 @@ class Route:
             curTime += self.instance.distMatrix[preID][postID]
             if curTime > self.nodes[i].dueTime:
                 # check timewindow
-                print(f"FAIL: Cus {self.nodes[i].id} Break time window!!, {len(self.nodes)}")
+                print(f"FAIL: Cus {self.nodes[i].id} Break time window!!, {len(self.nodes)}, display it:")
                 for node in self.nodes:
                     print(node)
                 return False
