@@ -7,7 +7,7 @@ class Repair:
         self.solution = solution 
     
     def executeMultiGreedyInsertion(self, randomGen):
-        sortByRules = randomGen.randint(1, 4)
+        sortByRules = randomGen.randint(1, 7)
         tempArray = []
         if sortByRules == 1:
             sorted(self.solution.notServed, key = lambda node: node.demand, reverse = True)
@@ -27,6 +27,12 @@ class Repair:
             # print("H3")
             # for node in self.solution.notServed:
             #     print(node)
+        elif sortByRules == 4:
+            sorted(self.solution.notServed, key = lambda node: node.dueTime - node.readyTime, reverse = False)
+        elif sortByRules == 5:
+            sorted(self.solution.notServed, key = lambda node: node.readyTime, reverse = False)
+        elif sortByRules == 7:
+            sorted(self.solution.notServed, key = lambda node: node.dueTime, reverse = True)
         else:
             randomGen.shuffle(self.solution.notServed)
             # random shuffle

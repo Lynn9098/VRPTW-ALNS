@@ -32,13 +32,15 @@ class ALNS:
         print(f"Terminated! CPU times {cpuTime} seconds")
         # cnt = 0
         self.tempSolution = copy.deepcopy(self.currentSolution)
-        totalIter = 10000
+        totalIter = 15000
             
         for cnt in range(totalIter):
             
             # print(f"Iter {cnt}")
             removaln = self.randomGen.randint(3, int(0.1 * self.instance.numNodes - 1))
-            repairSolution = self.destroyAndRepair(1, 1, removaln)
+            chooseDestroy = self.randomGen.randint(1, 2)
+            # repairSolution = self.destroyAndRepair(1, 1, removaln)
+            repairSolution = self.destroyAndRepair(chooseDestroy, 1, removaln)
             self.ifAccept(repairSolution, cnt)
             
             if cnt < totalIter * 0.2:
@@ -46,7 +48,7 @@ class ALNS:
             
         self.currentSolution.checkFeasibility()
             # print("Pass Feasibility Check!")
-            # print(self.currentSolution)
+        print(self.currentSolution)
     
     def constructInitialSolution(self):
         """Construct the initial solution
@@ -108,6 +110,8 @@ class ALNS:
         destroySolution = Destroy(self.instance, self.tempSolution)
         if destroyOptNo == 1:
             destroySolution.executeRandomRemoval(removaln, self.randomGen)
+        elif destroyOptNo == 2:
+            destroySolution.executeStringRemoval(self.avgCusRmved, self.maxStringLen, self.randomGen)
         
         tempSolution2 = destroySolution.solution.copy() # This is very important! 
         repairSolution = Repair(self.instance, tempSolution2)
@@ -117,7 +121,6 @@ class ALNS:
         
         return repairSolution
     
-        
     
     def ifAccept(self, repairSolution, iterNum = 0):
         """check if this repaired solution should be accepted

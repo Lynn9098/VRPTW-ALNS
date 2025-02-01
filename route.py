@@ -126,6 +126,15 @@ class Route:
             self.waitingTime[j] = max(0, currNode.readyTime - curArrivalTime)
         self.forgePushForward()
     
+    def removeCustomerByIndex(self, rmvdIdxes):
+        for index in rmvdIdxes[::-1]:
+            self.nodesSet.remove(self.nodes[index])
+            self.nodes.pop(index)
+            # delete by index 
+        self.distance = self.computeDistance()
+        self.calculateTime()
+        self.forgePushForward()
+        
     
     def greedyInsert(self, customer):
         """Greedily insert the customer into this route .. 

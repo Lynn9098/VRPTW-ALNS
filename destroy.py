@@ -36,11 +36,12 @@ class Destroy:
         """
         pass
     
-    def executeStringRemoval(self, nRemoval, avgCusRmvd, maxStringLen, randomGen):
+    def executeStringRemoval(self, avgCusRmvd, maxStringLen, randomGen):
         """_summary_
 
         Args:
-            nRemoval (_type_): _description_
+            avgCusRmvd (_type_): _description_
+            maxStringLen (_type_): _description_
             randomGen (_type_): _description_
         """
         routeNodes = [len(route.nodes) - 2 for route in self.solution.routes]
@@ -51,10 +52,12 @@ class Destroy:
         l_max_s = min(maxStringLen, avgNodesPerRoute)
         # max string length. cannot totally remove a route ?
         k_max_s = (4 * avgCusRmvd) / (1 + l_max_s) - 1
+        # print(f"k_max_s {k_max_s}", end = " ")
         # the maximum number of strings
         k_s = int(randomGen.uniform(1, k_max_s + 1))
         # the number of strings to be removed for this solution ... 
         cus_seed = randomGen.choice(self.solution.served)
+        cusSeedId = cus_seed.id
         # find the seed customer where the string removal begins
         visitedCusId = set()
         # to restore deleted customers id that have been removed ...
@@ -65,7 +68,7 @@ class Destroy:
         # 1. the route of each customer,  
         # 2. the customers each route served ... 
         # 3. the sequence of customers each route served ...
-        for idx, route in enumerate(self.instance.routes):
+        for idx, route in enumerate(self.solution.routes):
             enRouteCusDict[idx] = []
             enRouteCusSeqDict[idx] = []
             for node in route.nodes:
@@ -74,31 +77,45 @@ class Destroy:
                     enRouteCusDict[idx].append(node.id)
                 enRouteCusSeqDict[idx].append(node.id)
         
-        for nodeId in enRouteCusDict[cusEnRouteList[cus_seed.id]]:
+        for nodeId in enRouteCusDict[cusEnRouteList[cusSeedId]]:
             visitedCusId.add(nodeId)
             # keep track of visited customers ... 
         
+        # print(f"k_s = {k_s} avgCusRmvd = {avgCusRmvd}, maxStringLen = {maxStringLen}  ", end = " ")
         for i in range(k_s):
             # need to remove k_s routes ... 
-            for customer_id in self.instance.adjDistMatrix[cus_seed.id]:
+            for customer_id in self.instance.adjDistMatrix[cusSeedId]:
                 # iterate over all nodes ... 
-                if customer_id in visitedCusId:
-                    # if the customer has been visited, skip it ... 
+                if customer_id in visitedCusId or customer_id == 0:
+                    # if the customer has been visited, or if the customer is depot, skip it ... 
                     continue
                 else:
                     # if the customer has not been visited, add it to the visited list ... 
                     # this tour is the next string ... 
                     # determine the l_max_t, l_t (removed string length)
-                    l_max_t = min(len(enRouteCusDict[cusEnRouteList[cus_seed.id]]), l_max_s)
-                    l_t = int(randomGen.uniform(1, l_max_t + 1))
-                pass
-            pass
+                    # print(f"Cus ID : {customer_id}")
+                    l_max_t = min(len(enRouteCusDict[cusEnRouteList[customer_id]]), l_max_s)
+                    l_t = int(randomGen.uniform(1, l_max_t))
+                    rmvdIdxes = self.chooseCusViaString(customer_id, enRouteCusSeqDict[cusEnRouteList[customer_id]], l_t, randomGen)
+                    self.solution.removeRouteString(cusEnRouteList[customer_id], rmvdIdxes)
+                    for sameRouteCusId in enRouteCusDict[cusEnRouteList[customer_id]]:
+                        visitedCusId.add(sameRouteCusId)
+                    # print(f"Current Visited Cus ID : {visitedCusId}")
+                    cusSeedId = customer_id
+                    break
+    
+    def executeRemoveByIndex(self, routeIdx, rmvdIdxes):
+        """Remove customer by their index in route[routeIdx]
+
+        Args:
+            routeIdx (_type_): _description_
+            rmvdIdxes (_type_): _description_
+        """
+        self.solution.removeRouteString(routeIdx, rmvdIdxes)
         
-        
-        pass
     
     def chooseCusViaString(self, cusId, cusSeq, rmvLen, randomGen):
-        """Given cus seq, targeted_cus_id, choose cus via string
+        """Given cus seq, targeted_cus_id, choose cus via string, return a list of cus index
 
         Args:
             cusId (_type_): _description_
@@ -112,7 +129,6 @@ class Destroy:
             if cusId in cusIdList and 0 not in cusIdList:
                 # check if the string satisfy ... 
                 validSubLists.append([k for k in range(i, i + rmvLen)])
-            # pass
         if len(validSubLists) > 0:
             return randomGen.choice(validSubLists)
         else:

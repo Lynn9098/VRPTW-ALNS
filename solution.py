@@ -169,15 +169,35 @@ class Solution:
         self.served.remove(customer)
         self.notServed.append(customer)
 
-    def removeRouteString(self, routeIdx, customerIdx):
+    def removeRouteString(self, routeIdx, rmvdIdxes):
         """Remove a string of customers from route with routeIdx via customerIdx
 
         Args:
             routeIdx (_type_): _description_
-            customerIdx (_type_): _description_
+            rmvdIdxes (_type_): _description_
         """
-        # TODO here ... 
-        pass
+
+        rmvdLen = len(rmvdIdxes)
+        prevDist = self.routes[routeIdx].computeDistance()
+        # print(f"routeIdx : {routeIdx}, rmvdIdxes: {rmvdIdxes}")
+
+        # for node in self.routes[routeIdx].nodes:
+        #     print(node)
+        for index in rmvdIdxes:
+            self.served.remove(self.routes[routeIdx].nodes[index])
+            self.notServed.append(self.routes[routeIdx].nodes[index])
+        
+        if rmvdLen == len(self.routes[routeIdx].nodes) - 2:
+            self.routes.pop(routeIdx)
+            self.distance -= prevDist
+        else:
+            self.routes[routeIdx].removeCustomerByIndex(rmvdIdxes)
+            self.distance += (self.routes[routeIdx].distance - prevDist)
+        
+        # print("Removed: ")
+        # for node in self.routes[routeIdx].nodes:
+        #     print(node)
+        # print(len(self.routes[routeIdx].nodesSet))
     
     def removeRoute(self, routeIdx):
         """remove route from solution and update ... 
