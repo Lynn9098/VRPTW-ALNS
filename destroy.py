@@ -47,8 +47,6 @@ class Destroy:
         routeNodes = [len(route.nodes) - 2 for route in self.solution.routes]
         avgNodesPerRoute = sum(routeNodes) // len(self.solution.routes)
         # record average number of nodes per route
-        maxNodesOfRoute = max(routeNodes)
-        # record maximum number of nodes served by a route
         l_max_s = min(maxStringLen, avgNodesPerRoute)
         # max string length. cannot totally remove a route ?
         k_max_s = (4 * avgCusRmvd) / (1 + l_max_s) - 1
@@ -93,7 +91,6 @@ class Destroy:
                     # if the customer has not been visited, add it to the visited list ... 
                     # this tour is the next string ... 
                     # determine the l_max_t, l_t (removed string length)
-                    # print(f"Cus ID : {customer_id}")
                     l_max_t = min(len(enRouteCusDict[cusEnRouteList[customer_id]]), l_max_s)
                     l_t = int(randomGen.uniform(1, l_max_t))
                     rmvdIdxes = self.chooseCusViaString(customer_id, enRouteCusSeqDict[cusEnRouteList[customer_id]], l_t, randomGen)
@@ -103,6 +100,72 @@ class Destroy:
                     # print(f"Current Visited Cus ID : {visitedCusId}")
                     cusSeedId = customer_id
                     break
+    
+    def executeSplitStringRemoval(self, avgCusRmvd, maxStringLen, randomGen):
+        routeNodes = [len(route.nodes) - 2 for route in self.solution.routes]
+        avgNodesPerRoute = sum(routeNodes) // len(self.solution.routes)
+        # record average number of nodes per route
+        l_max_s = min(maxStringLen, avgNodesPerRoute)
+        # max string length. cannot totally remove a route ?
+        k_max_s = (4 * avgCusRmvd) / (1 + l_max_s) - 1
+        # print(f"k_max_s {k_max_s}", end = " ")
+        # the maximum number of strings
+        k_s = int(randomGen.uniform(1, k_max_s + 1))
+        # the number of strings to be removed for this solution ... 
+        cus_seed = randomGen.choice(self.solution.served)
+        cusSeedId = cus_seed.id
+        # find the seed customer where the string removal begins
+        visitedCusId = [-1 for _ in range(self.instance.numNodes)]
+        # to restore deleted customers id that have been removed ...
+        cusEnRouteList = [-1 for _ in range(self.instance.numNodes)]
+        enRouteCusDict = dict()
+        enRouteCusSeqDict = dict()
+        # record the following: 
+        # 1. the route of each customer,  
+        # 2. the customers each route served ... 
+        # 3. the sequence of customers each route served ...
+        for idx, route in enumerate(self.solution.routes):
+            enRouteCusDict[idx] = []
+            enRouteCusSeqDict[idx] = []
+            for node in route.nodes:
+                if node.id != 0:
+                    cusEnRouteList[node.id] = idx
+                    enRouteCusDict[idx].append(node.id)
+                enRouteCusSeqDict[idx].append(node.id)
+        
+        for nodeId in enRouteCusDict[cusEnRouteList[cusSeedId]]:
+            visitedCusId[nodeId] = 1
+        visitedCusId[0] = 1
+        
+        for i in range(k_s):
+            for customer_id in self.instance.adjDistMatrix[cusSeedId]:
+                if visitedCusId[customer_id] or customer_id == 0:
+                    # if the customer has been visited, or if the customer is depot, skip it ... 
+                    continue
+                else:
+                    curRouteLen = len(enRouteCusDict[cusEnRouteList[customer_id]])
+                    l_max_t = min(curRouteLen, l_max_s)
+                    l_t = int(randomGen.uniform(1, l_max_t))
+                    # decide if the remove is head-tail
+                    augRmv = 1
+                    tailHeadSplit = False
+                    if l_t != curRouteLen:
+                        while l_t + augRmv < curRouteLen:
+                            if randomGen.random() > 0.99:
+                                break
+                            augRmv += 1
+                        if augRmv + l_t == curRouteLen:
+                            # Head Tail removal ... only keeps augRmv Nodes ... 
+                            keptIdxes = self.chooseCusViaString(customer_id, enRouteCusSeqDict[cusEnRouteList[customer_id]], augRmv , randomGen)
+                            # since delete tail & head, current string is kept!
+                            self.solution.keepRouteString(cusEnRouteList[customer_id], keptIdxes)
+                            for sameRouteCusId in enRouteCusDict[cusEnRouteList[customer_id]]:
+                                visitedCusId[sameRouteCusId] = 1
+                        else:
+                            # remove l_t yet skip several node .. 
+                            pass
+
+        pass
     
     def executeRemoveByIndex(self, routeIdx, rmvdIdxes):
         """Remove customer by their index in route[routeIdx]
@@ -160,7 +223,7 @@ class Destroy:
         rmvdRouteIdx = randomGen.randint(0, len(self.solution.routes) - 1)
         # choose the route index to be removed 
         self.solution.removeRoute(rmvdRouteIdx)
-        self.solution.distance = self.solution.computeDistance()
+        # self.solution.distance = self.solution.computeDistance()
 
 
     def __str__(self):

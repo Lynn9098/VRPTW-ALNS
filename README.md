@@ -20,6 +20,7 @@ Solve VRPTW with ALNS algorithm. Extensive computational experiment is all you n
 > 3. Shaw Removal 🐌 ... 
 >
 > 4. String removal (See `Jan Christiaens, Greet Vanden Berghe (2020) Slack Induction by String Removals for Vehicle Routing Problems. Transportation Science`) 🐌 ... 
+> Complete String removal, waiting for split removal procedure.
 
 **Repair Operator:**
 

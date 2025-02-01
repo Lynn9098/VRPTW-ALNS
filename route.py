@@ -102,14 +102,6 @@ class Route:
             print("FAIL! Trying to remove a non-exist customer!")
             return
         
-        # if customer not in self.nodes:
-        #     print(f"Customer : {str(customer)}")
-        #     for node in self.nodes:
-        #         print(node)
-        #     print("===")
-        #     for node in self.nodesSet:
-        #         print(node)
-        
         del_cus_idx = self.nodes.index(customer)
         prevNode = self.nodes[del_cus_idx - 1]
         succNode = self.nodes[del_cus_idx + 1]

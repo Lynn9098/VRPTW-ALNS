@@ -199,12 +199,31 @@ class Solution:
         #     print(node)
         # print(len(self.routes[routeIdx].nodesSet))
     
+    def keepRouteString(self, routeIdx, keptIdxes):
+        """Remove customers except those index in keptIdxes
+
+        Args:
+            routeIdx (_type_): _description_
+            keptIdxes (_type_): _description_
+        """
+        setKept = set(keptIdxes)
+        rmvdIdxes = [k for k in range(1, len(self.routes[routeIdx].nodes) - 1) if k not in setKept]
+        prevDist = self.routes[routeIdx].computeDistance()
+        for index in rmvdIdxes:
+            self.served.remove(self.routes[routeIdx].nodes[index])
+            self.notServed.append(self.routes[routeIdx].nodes[index])
+        
+        self.routes[routeIdx].removeCustomerByIndex(rmvdIdxes)
+        self.distance += (self.routes[routeIdx].distance - prevDist)
+
+    
     def removeRoute(self, routeIdx):
         """remove route from solution and update ... 
 
         Args:
             routeIdx (_type_): _description_
         """
+        self.distance -= self.routes[routeIdx].distance
         for customer in self.routes[routeIdx].nodesSet:
             if customer.id != 0:
                 self.served.remove(customer)

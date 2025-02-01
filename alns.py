@@ -32,23 +32,28 @@ class ALNS:
         print(f"Terminated! CPU times {cpuTime} seconds")
         # cnt = 0
         self.tempSolution = copy.deepcopy(self.currentSolution)
-        totalIter = 15000
-            
+        totalIter = 5000
+        
+        starttime = time.time()
         for cnt in range(totalIter):
             
             # print(f"Iter {cnt}")
             removaln = self.randomGen.randint(3, int(0.1 * self.instance.numNodes - 1))
             chooseDestroy = self.randomGen.randint(1, 2)
             # repairSolution = self.destroyAndRepair(1, 1, removaln)
+            # repairSolution = self.destroyAndRepair(2, 1, removaln)
             repairSolution = self.destroyAndRepair(chooseDestroy, 1, removaln)
             self.ifAccept(repairSolution, cnt)
             
             if cnt < totalIter * 0.2:
                 self.executeFleetMin(cnt)
-            
+        
+        endtime = time.time()
+        cpuTimeIteration = round(endtime - starttime, 3)
         self.currentSolution.checkFeasibility()
             # print("Pass Feasibility Check!")
         print(self.currentSolution)
+        print(f"Iteration Time: {cpuTimeIteration}")
     
     def constructInitialSolution(self):
         """Construct the initial solution
@@ -57,7 +62,7 @@ class ALNS:
         self.currentSolution = Solution(self.instance, list(), list(), self.instance.customers.copy())
         # self.currentSolution.executeTimeNN()
         # 2. based on each route per customer ...
-        # self.currentSolution.executeNaive()
+        # self.currentSolution.executeNaive() # FIXME: Some problem with this! Check it out!
         # 3. based on C-W saving Heuristic (seems very efficient!)
         self.currentSolution.executeCWsaving(self.randomGen)
 
@@ -104,7 +109,6 @@ class ALNS:
         Returns:
             _type_: _description_
         """
-        # TODO: test it ... 
         # depict the destroy and repair process ... 
         self.tempSolution = copy.deepcopy(self.currentSolution)
         destroySolution = Destroy(self.instance, self.tempSolution)
