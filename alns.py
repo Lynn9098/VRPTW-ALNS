@@ -42,14 +42,14 @@ class ALNS:
             if cnt == 0:
                 chooseDestroy = self.randomGen.randint(1, 4)
             else:
-                chooseDestroy = self.randomGen.randint(1, 6)
+                chooseDestroy = self.randomGen.randint(1, 4)
             # print(f"Iter {cnt}, destroy method:  {chooseDestroy}")
             if chooseDestroy <= 2:
                 repairSolution = self.destroyAndRepair(1, 1, removaln)
             elif chooseDestroy <= 4:
                 repairSolution = self.destroyAndRepair(2, 1, removaln)
-            else:
-                repairSolution = self.destroyAndRepair(3, 1, removaln)
+            # else:
+            #     repairSolution = self.destroyAndRepair(3, 1, removaln)
             # repairSolution = self.destroyAndRepair(1, 1, removaln)
             # repairSolution = self.destroyAndRepair(2, 1, removaln)
             # repairSolution = self.destroyAndRepair(3, 1, removaln)

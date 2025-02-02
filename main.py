@@ -8,7 +8,7 @@ if __name__ == "__main__":
     # instList = ["C2_2_4.txt"]
     # test list : C2_6_3.txt (checked)
     folder = "./benchmark/Solomon/"
-    instList = ["r101.txt"] # FIXME: BUG here! 
+    instList = ["rc101.txt"] # FIXME: BUG here! 
     
     for inst in instList:
         fileName = folder + inst

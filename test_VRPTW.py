@@ -481,7 +481,7 @@ results=[]
 filePath = "./benchmark/Gehring&Homberge/"
 filePath = "./benchmark/Solomon/"
 #instances_vrptw=os.listdir(filePath)
-instances_vrptw=['c102.txt']#,'r102.txt','r103.txt']#,'r104.txt','r105.txt','r106.txt',
+instances_vrptw=['rc101.txt']#,'r102.txt','r103.txt']#,'r104.txt','r105.txt','r106.txt',
                  #'r107.txt','r108.txt','r109.txt','r110.txt','r111.txt','r112.txt',]
 for instance_name in instances_vrptw:
     start = time.time()
