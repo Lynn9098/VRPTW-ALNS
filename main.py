@@ -4,11 +4,11 @@ from visualizer import Visualizer
 
 if __name__ == "__main__":
     # 跑通一个case的
-    folder = "./benchmark/Gehring&Homberge/"
-    instList = ["C2_4_4.txt"]
+    # folder = "./benchmark/Gehring&Homberge/"
+    # instList = ["C2_2_4.txt"]
     # test list : C2_6_3.txt (checked)
-    # folder = "./benchmark/Solomon/"
-    # instList = ["c104.txt"]
+    folder = "./benchmark/Solomon/"
+    instList = ["r101.txt"] # FIXME: BUG here! 
     
     for inst in instList:
         fileName = folder + inst
@@ -17,3 +17,4 @@ if __name__ == "__main__":
         alns_solver.execute()
         # vrptw_visualizer = Visualizer(curInstance, alns_solver.bestSolution)
         # vrptw_visualizer.show()
+        

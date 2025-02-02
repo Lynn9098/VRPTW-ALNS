@@ -183,9 +183,12 @@ class Solution:
 
         # for node in self.routes[routeIdx].nodes:
         #     print(node)
+        # print(f"Run Remove Route String, Original : {[node.id for node in self.routes[routeIdx].nodes]}")
         for index in rmvdIdxes:
             self.served.remove(self.routes[routeIdx].nodes[index])
             self.notServed.append(self.routes[routeIdx].nodes[index])
+        #     print(f"Removed: {self.routes[routeIdx].nodes[index].id}", end = ",")
+        # print("")
         
         if rmvdLen == len(self.routes[routeIdx].nodes) - 2:
             self.routes.pop(routeIdx)
@@ -209,10 +212,12 @@ class Solution:
         setKept = set(keptIdxes)
         rmvdIdxes = [k for k in range(1, len(self.routes[routeIdx].nodes) - 1) if k not in setKept]
         prevDist = self.routes[routeIdx].computeDistance()
+        # print(f"Run Keep Route String, Original : {[node.id for node in self.routes[routeIdx].nodes]}")
         for index in rmvdIdxes:
             self.served.remove(self.routes[routeIdx].nodes[index])
             self.notServed.append(self.routes[routeIdx].nodes[index])
-        
+        #     print(f"Removed: {self.routes[routeIdx].nodes[index].id}", end = ",")
+        # print("")
         self.routes[routeIdx].removeCustomerByIndex(rmvdIdxes)
         self.distance += (self.routes[routeIdx].distance - prevDist)
 

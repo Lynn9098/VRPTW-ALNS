@@ -29,22 +29,33 @@ class ALNS:
         endtime = time.time()
         cpuTime = round(endtime - starttime, 3)
 
-        print(f"Terminated! CPU times {cpuTime} seconds")
+        print(f"Terminated! CPU times {cpuTime} seconds, cost : {self.currentSolution.distance}")
         # cnt = 0
         self.tempSolution = copy.deepcopy(self.currentSolution)
-        totalIter = 5000
+        totalIter = 20000
         
         starttime = time.time()
         for cnt in range(totalIter):
             
             # print(f"Iter {cnt}")
-            removaln = self.randomGen.randint(3, int(0.1 * self.instance.numNodes - 1))
-            chooseDestroy = self.randomGen.randint(1, 2)
+            removaln = self.randomGen.randint(1, int(0.1 * self.instance.numNodes - 1))
+            if cnt == 0:
+                chooseDestroy = self.randomGen.randint(1, 4)
+            else:
+                chooseDestroy = self.randomGen.randint(1, 6)
+            # print(f"Iter {cnt}, destroy method:  {chooseDestroy}")
+            if chooseDestroy <= 2:
+                repairSolution = self.destroyAndRepair(1, 1, removaln)
+            elif chooseDestroy <= 4:
+                repairSolution = self.destroyAndRepair(2, 1, removaln)
+            else:
+                repairSolution = self.destroyAndRepair(3, 1, removaln)
             # repairSolution = self.destroyAndRepair(1, 1, removaln)
             # repairSolution = self.destroyAndRepair(2, 1, removaln)
-            repairSolution = self.destroyAndRepair(chooseDestroy, 1, removaln)
-            self.ifAccept(repairSolution, cnt)
-            
+            # repairSolution = self.destroyAndRepair(3, 1, removaln)
+            # repairSolution = self.destroyAndRepair(chooseDestroy, 1, removaln)
+            self.ifAccept(repairSolution, cnt, chooseDestroy, 1)
+
             if cnt < totalIter * 0.2:
                 self.executeFleetMin(cnt)
         
@@ -116,6 +127,8 @@ class ALNS:
             destroySolution.executeRandomRemoval(removaln, self.randomGen)
         elif destroyOptNo == 2:
             destroySolution.executeStringRemoval(self.avgCusRmved, self.maxStringLen, self.randomGen)
+        elif destroyOptNo == 3:
+            destroySolution.executeSplitStringRemoval(self.avgCusRmved, self.maxStringLen, self.randomGen)
         
         tempSolution2 = destroySolution.solution.copy() # This is very important! 
         repairSolution = Repair(self.instance, tempSolution2)
@@ -126,7 +139,7 @@ class ALNS:
         return repairSolution
     
     
-    def ifAccept(self, repairSolution, iterNum = 0):
+    def ifAccept(self, repairSolution, iterNum = 0,  chooseDestroy = 0, chooseRepair = 0):
         """check if this repaired solution should be accepted
 
         Args:
@@ -137,5 +150,5 @@ class ALNS:
             if len(repairSolution.solution.routes) > len(self.currentSolution.routes):
                 return
             self.currentSolution = repairSolution.solution
-            print(f"Found!! Obj: {repairSolution.solution.distance}, IterNum : {iterNum} , trucks: {len(repairSolution.solution.routes)} complete! ")
+            print(f"Found!! Obj: {repairSolution.solution.distance}, IterNum : {iterNum} , trucks: {len(repairSolution.solution.routes)} complete! Des: {chooseDestroy}, Rep: {chooseRepair}")
             

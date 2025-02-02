@@ -136,19 +136,20 @@ class Destroy:
         for nodeId in enRouteCusDict[cusEnRouteList[cusSeedId]]:
             visitedCusId[nodeId] = 1
         visitedCusId[0] = 1
-        
         for i in range(k_s):
+            # print("CUT!")
             for customer_id in self.instance.adjDistMatrix[cusSeedId]:
-                if visitedCusId[customer_id] or customer_id == 0:
+                # print(f"Customer_id : {customer_id}")
+                if visitedCusId[customer_id] == 1 or customer_id == 0:
                     # if the customer has been visited, or if the customer is depot, skip it ... 
                     continue
                 else:
+                    # print("HERE")
                     curRouteLen = len(enRouteCusDict[cusEnRouteList[customer_id]])
                     l_max_t = min(curRouteLen, l_max_s)
                     l_t = int(randomGen.uniform(1, l_max_t))
                     # decide if the remove is head-tail
                     augRmv = 1
-                    tailHeadSplit = False
                     if l_t != curRouteLen:
                         while l_t + augRmv < curRouteLen:
                             if randomGen.random() > 0.99:
@@ -163,7 +164,18 @@ class Destroy:
                                 visitedCusId[sameRouteCusId] = 1
                         else:
                             # remove l_t yet skip several node .. 
-                            pass
+                            rmvdIdxes = self.chooseCusViaStringSplit(customer_id, enRouteCusSeqDict[cusEnRouteList[customer_id]], l_t + augRmv, augRmv, randomGen)
+                            self.solution.removeRouteString(cusEnRouteList[customer_id], rmvdIdxes)
+                            for sameRouteCusId in enRouteCusDict[cusEnRouteList[customer_id]]:
+                                visitedCusId[sameRouteCusId] = 1
+                    else:
+                        l_max_t = min(len(enRouteCusDict[cusEnRouteList[customer_id]]), l_max_s)
+                        l_t = int(randomGen.uniform(1, l_max_t))
+                        rmvdIdxes = self.chooseCusViaString(customer_id, enRouteCusSeqDict[cusEnRouteList[customer_id]], l_t, randomGen)
+                        self.solution.removeRouteString(cusEnRouteList[customer_id], rmvdIdxes)
+                        for sameRouteCusId in enRouteCusDict[cusEnRouteList[customer_id]]:
+                            visitedCusId[sameRouteCusId] = 1
+                    cusSeedId = customer_id
 
         pass
     
@@ -196,7 +208,30 @@ class Destroy:
             return randomGen.choice(validSubLists)
         else:
             return []
-        
+    
+    def chooseCusViaStringSplit(self, cusId, cusSeq, rmvLen, keptLen, randomGen):
+        """
+
+        Args:
+            cusId (_type_): _description_
+            cusSeq (_type_): _description_
+            rmvLen (_type_): _description_
+            randomGen (_type_): _description_
+        """
+        validSubLists = []
+        for i in range(len(cusSeq) - rmvLen + 1):
+            cusIdList = cusSeq[i: i + rmvLen]
+            if cusId in cusIdList and 0 not in cusIdList:
+                # check if the string satisfy ... 
+                validSubLists.append([k for k in range(i, i + rmvLen)])
+        tempValidList = randomGen.choice(validSubLists)
+        cnt = 0
+        while cnt < keptLen:
+            idx = randomGen.randint(0, len(tempValidList) - 1)
+            if tempValidList[idx] != cusId:
+                tempValidList.pop(idx)
+                cnt += 1
+        return tempValidList
     
     def executeShawRemoval(self, nRemoval, randomGen):
         """Shaw removal
