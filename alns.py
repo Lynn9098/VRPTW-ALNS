@@ -30,26 +30,25 @@ class ALNS:
         cpuTime = round(endtime - starttime, 3)
 
         print(f"Terminated! CPU times {cpuTime} seconds, cost : {self.currentSolution.distance}")
-        # cnt = 0
+
         self.tempSolution = copy.deepcopy(self.currentSolution)
         totalIter = 20000
         
         starttime = time.time()
         for cnt in range(totalIter):
-            
-            # print(f"Iter {cnt}")
+        
             removaln = self.randomGen.randint(1, int(0.1 * self.instance.numNodes - 1))
             if cnt == 0:
-                chooseDestroy = self.randomGen.randint(1, 4)
+                chooseDestroy = self.randomGen.randint(1, 6)
             else:
-                chooseDestroy = self.randomGen.randint(1, 4)
+                chooseDestroy = self.randomGen.randint(1, 6)
             # print(f"Iter {cnt}, destroy method:  {chooseDestroy}")
             if chooseDestroy <= 2:
                 repairSolution = self.destroyAndRepair(1, 1, removaln)
             elif chooseDestroy <= 4:
                 repairSolution = self.destroyAndRepair(2, 1, removaln)
-            # else:
-            #     repairSolution = self.destroyAndRepair(3, 1, removaln)
+            else:
+                repairSolution = self.destroyAndRepair(3, 1, removaln)
             # repairSolution = self.destroyAndRepair(1, 1, removaln)
             # repairSolution = self.destroyAndRepair(2, 1, removaln)
             # repairSolution = self.destroyAndRepair(3, 1, removaln)
@@ -73,7 +72,7 @@ class ALNS:
         self.currentSolution = Solution(self.instance, list(), list(), self.instance.customers.copy())
         # self.currentSolution.executeTimeNN()
         # 2. based on each route per customer ...
-        # self.currentSolution.executeNaive() # FIXME: Some problem with this! Check it out!
+        # self.currentSolution.executeNaive()
         # 3. based on C-W saving Heuristic (seems very efficient!)
         self.currentSolution.executeCWsaving(self.randomGen)
 

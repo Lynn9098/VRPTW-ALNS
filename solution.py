@@ -190,12 +190,12 @@ class Solution:
         #     print(f"Removed: {self.routes[routeIdx].nodes[index].id}", end = ",")
         # print("")
         
-        if rmvdLen == len(self.routes[routeIdx].nodes) - 2:
-            self.routes.pop(routeIdx)
-            self.distance -= prevDist
-        else:
-            self.routes[routeIdx].removeCustomerByIndex(rmvdIdxes)
-            self.distance += (self.routes[routeIdx].distance - prevDist)
+        # if rmvdLen == len(self.routes[routeIdx].nodes) - 2:
+        #     self.routes.pop(routeIdx)
+        #     self.distance -= prevDist
+        # else:
+        self.routes[routeIdx].removeCustomerByIndex(rmvdIdxes)
+        self.distance += (self.routes[routeIdx].distance - prevDist)
         
         # print("Removed: ")
         # for node in self.routes[routeIdx].nodes:

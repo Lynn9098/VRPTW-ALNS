@@ -80,6 +80,7 @@ class Destroy:
             # keep track of visited customers ... 
         
         # print(f"k_s = {k_s} avgCusRmvd = {avgCusRmvd}, maxStringLen = {maxStringLen}  ", end = " ")
+        entireRouteRemoval = [] # record routes that are entirely removed ... 
         for i in range(k_s):
             # need to remove k_s routes ... 
             for customer_id in self.instance.adjDistMatrix[cusSeedId]:
@@ -91,16 +92,30 @@ class Destroy:
                     # if the customer has not been visited, add it to the visited list ... 
                     # this tour is the next string ... 
                     # determine the l_max_t, l_t (removed string length)
-                    l_max_t = min(len(enRouteCusDict[cusEnRouteList[customer_id]]), l_max_s)
+                    routeIdx = cusEnRouteList[customer_id]
+                    l_max_t = min(len(enRouteCusDict[routeIdx]), l_max_s)
                     l_t = int(randomGen.uniform(1, l_max_t))
-                    rmvdIdxes = self.chooseCusViaString(customer_id, enRouteCusSeqDict[cusEnRouteList[customer_id]], l_t, randomGen)
-                    self.solution.removeRouteString(cusEnRouteList[customer_id], rmvdIdxes)
-                    for sameRouteCusId in enRouteCusDict[cusEnRouteList[customer_id]]:
+                    
+                    curRoute = enRouteCusSeqDict[routeIdx]
+                    # print(curRoute, l_t, routeIdx)
+                    rmvdIdxes = self.chooseCusViaString(customer_id, enRouteCusSeqDict[routeIdx], l_t, randomGen)
+                    if len(rmvdIdxes) == len(curRoute):
+                        # The route is actually entirely removed ... 
+                        entireRouteRemoval.append(routeIdx)
+                    self.solution.removeRouteString(routeIdx, rmvdIdxes)
+                    for sameRouteCusId in enRouteCusDict[routeIdx]:
                         visitedCusId.add(sameRouteCusId)
                     # print(f"Current Visited Cus ID : {visitedCusId}")
                     cusSeedId = customer_id
                     break
-    
+        
+        if len(entireRouteRemoval) > 0:
+            sorted(entireRouteRemoval)
+            for routeIdx in entireRouteRemoval[::-1]:
+                # backward update to avoid index conflict ... 
+                self.solution.routes.pop(routeIdx)
+            
+        
     def executeSplitStringRemoval(self, avgCusRmvd, maxStringLen, randomGen):
         routeNodes = [len(route.nodes) - 2 for route in self.solution.routes]
         avgNodesPerRoute = sum(routeNodes) // len(self.solution.routes)
@@ -136,15 +151,14 @@ class Destroy:
         for nodeId in enRouteCusDict[cusEnRouteList[cusSeedId]]:
             visitedCusId[nodeId] = 1
         visitedCusId[0] = 1
+        entireRouteRemoval = []
         for i in range(k_s):
-            # print("CUT!")
             for customer_id in self.instance.adjDistMatrix[cusSeedId]:
                 # print(f"Customer_id : {customer_id}")
                 if visitedCusId[customer_id] == 1 or customer_id == 0:
                     # if the customer has been visited, or if the customer is depot, skip it ... 
                     continue
                 else:
-                    # print("HERE")
                     curRouteLen = len(enRouteCusDict[cusEnRouteList[customer_id]])
                     l_max_t = min(curRouteLen, l_max_s)
                     l_t = int(randomGen.uniform(1, l_max_t))
@@ -156,24 +170,31 @@ class Destroy:
                                 break
                             augRmv += 1
                         if augRmv + l_t == curRouteLen:
-                            # Head Tail removal ... only keeps augRmv Nodes ... 
-                            keptIdxes = self.chooseCusViaString(customer_id, enRouteCusSeqDict[cusEnRouteList[customer_id]], augRmv , randomGen)
+                            # Head Tail removal ... only keeps augRmv Nodes which include customer seed 
+                            routeIdx = cusEnRouteList[customer_id]
+                            keptIdxes = self.chooseCusViaString(customer_id, enRouteCusSeqDict[routeIdx], augRmv , randomGen)
                             # since delete tail & head, current string is kept!
-                            self.solution.keepRouteString(cusEnRouteList[customer_id], keptIdxes)
-                            for sameRouteCusId in enRouteCusDict[cusEnRouteList[customer_id]]:
+                            self.solution.keepRouteString(routeIdx, keptIdxes)
+                            for sameRouteCusId in enRouteCusDict[routeIdx]:
                                 visitedCusId[sameRouteCusId] = 1
                         else:
                             # remove l_t yet skip several node .. 
-                            rmvdIdxes = self.chooseCusViaStringSplit(customer_id, enRouteCusSeqDict[cusEnRouteList[customer_id]], l_t + augRmv, augRmv, randomGen)
-                            self.solution.removeRouteString(cusEnRouteList[customer_id], rmvdIdxes)
-                            for sameRouteCusId in enRouteCusDict[cusEnRouteList[customer_id]]:
+                            routeIdx = cusEnRouteList[customer_id]
+                            rmvdIdxes = self.chooseCusViaStringSplit(customer_id, enRouteCusSeqDict[routeIdx], l_t + augRmv, augRmv, randomGen)
+                            self.solution.removeRouteString(routeIdx, rmvdIdxes)
+                            for sameRouteCusId in enRouteCusDict[routeIdx]:
                                 visitedCusId[sameRouteCusId] = 1
                     else:
-                        l_max_t = min(len(enRouteCusDict[cusEnRouteList[customer_id]]), l_max_s)
+                        routeIdx = cusEnRouteList[customer_id]
+                        l_max_t = min(len(enRouteCusDict[routeIdx]), l_max_s)
                         l_t = int(randomGen.uniform(1, l_max_t))
-                        rmvdIdxes = self.chooseCusViaString(customer_id, enRouteCusSeqDict[cusEnRouteList[customer_id]], l_t, randomGen)
-                        self.solution.removeRouteString(cusEnRouteList[customer_id], rmvdIdxes)
-                        for sameRouteCusId in enRouteCusDict[cusEnRouteList[customer_id]]:
+                        curRoute = enRouteCusSeqDict[routeIdx]
+                        rmvdIdxes = self.chooseCusViaString(customer_id, enRouteCusSeqDict[routeIdx], l_t, randomGen)
+                        if len(rmvdIdxes) == len(curRoute):
+                            # The route is actually entirely removed ... 
+                            entireRouteRemoval.append(routeIdx)
+                        self.solution.removeRouteString(routeIdx, rmvdIdxes)
+                        for sameRouteCusId in enRouteCusDict[routeIdx]:
                             visitedCusId[sameRouteCusId] = 1
                     cusSeedId = customer_id
 

@@ -4,12 +4,12 @@ from visualizer import Visualizer
 
 if __name__ == "__main__":
     # 跑通一个case的
-    # folder = "./benchmark/Gehring&Homberge/"
-    # instList = ["C2_2_4.txt"]
+    folder = "./benchmark/Gehring&Homberge/"
+    instList = ["RC2_6_1.txt"]
     # test list : C2_6_3.txt (checked)
-    folder = "./benchmark/Solomon/"
-    instList = ["rc101.txt"] # FIXME: BUG here! 
-    
+    # folder = "./benchmark/Solomon/"
+    # instList = ["rc101.txt"] 
+    # hard case: rc101,
     for inst in instList:
         fileName = folder + inst
         curInstance = Instance.readInstance(fileName)
