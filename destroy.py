@@ -57,7 +57,7 @@ class Destroy:
         cus_seed = randomGen.choice(self.solution.served)
         cusSeedId = cus_seed.id
         # find the seed customer where the string removal begins
-        visitedCusId = set()
+        visitedCusId = [-1 for _ in range(self.instance.numNodes)]
         # to restore deleted customers id that have been removed ...
         cusEnRouteList = [-1 for _ in range(self.instance.numNodes)]
         enRouteCusDict = dict()
@@ -76,16 +76,16 @@ class Destroy:
                 enRouteCusSeqDict[idx].append(node.id)
         
         for nodeId in enRouteCusDict[cusEnRouteList[cusSeedId]]:
-            visitedCusId.add(nodeId)
+            visitedCusId[nodeId] = 1
+        visitedCusId[0] = 1
             # keep track of visited customers ... 
         
-        # print(f"k_s = {k_s} avgCusRmvd = {avgCusRmvd}, maxStringLen = {maxStringLen}  ", end = " ")
         entireRouteRemoval = [] # record routes that are entirely removed ... 
         for i in range(k_s):
             # need to remove k_s routes ... 
             for customer_id in self.instance.adjDistMatrix[cusSeedId]:
                 # iterate over all nodes ... 
-                if customer_id in visitedCusId or customer_id == 0:
+                if visitedCusId[customer_id] == 1 or customer_id == 0:
                     # if the customer has been visited, or if the customer is depot, skip it ... 
                     continue
                 else:
@@ -104,7 +104,7 @@ class Destroy:
                         entireRouteRemoval.append(routeIdx)
                     self.solution.removeRouteString(routeIdx, rmvdIdxes)
                     for sameRouteCusId in enRouteCusDict[routeIdx]:
-                        visitedCusId.add(sameRouteCusId)
+                        visitedCusId[sameRouteCusId] = 1
                     # print(f"Current Visited Cus ID : {visitedCusId}")
                     cusSeedId = customer_id
                     break
