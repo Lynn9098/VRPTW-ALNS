@@ -12,21 +12,15 @@ class Repair:
         if sortByRules == 1:
             sorted(self.solution.notServed, key = lambda node: node.demand, reverse = True)
             # sort by demand, from high to low
-            # print("H1")
-            # for node in self.solution.notServed:
-            #     print(node)
+            
         elif sortByRules == 2:
             sorted(self.solution.notServed, key = lambda node: (node.x - self.instance.depot.x )**2 + (node.y - self.instance.depot.y)**2, reverse = True)
             # sort by distance, from high to low
-            # print("H2")
-            # for node in self.solution.notServed:
-            #     print(node)
+            
         elif sortByRules == 3:
             sorted(self.solution.notServed, key = lambda node: (node.x - self.instance.depot.x )**2 + (node.y - self.instance.depot.y)**2, reverse = False)
             # sort by distance, from low to high
-            # print("H3")
-            # for node in self.solution.notServed:
-            #     print(node)
+            
         elif sortByRules == 4:
             sorted(self.solution.notServed, key = lambda node: node.dueTime - node.readyTime, reverse = False)
         elif sortByRules == 5:

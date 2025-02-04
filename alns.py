@@ -32,38 +32,40 @@ class ALNS:
         print(f"Terminated! CPU times {cpuTime} seconds, cost : {self.currentSolution.distance}")
 
         self.tempSolution = copy.deepcopy(self.currentSolution)
-        totalIter = 20000
+        totalIter = 15000
         
         starttime = time.time()
         for cnt in range(totalIter):
         
             removaln = self.randomGen.randint(1, int(0.1 * self.instance.numNodes - 1))
             if cnt == 0:
-                chooseDestroy = self.randomGen.randint(1, 6)
+                chooseDestroy = self.randomGen.randint(1, 8)
             else:
-                chooseDestroy = self.randomGen.randint(1, 6)
+                chooseDestroy = self.randomGen.randint(1, 8)
             # print(f"Iter {cnt}, destroy method:  {chooseDestroy}")
-            if chooseDestroy <= 2:
+            if chooseDestroy <= 3:
                 repairSolution = self.destroyAndRepair(1, 1, removaln)
-            elif chooseDestroy <= 4:
+            elif chooseDestroy <= 6:
                 repairSolution = self.destroyAndRepair(2, 1, removaln)
             else:
                 repairSolution = self.destroyAndRepair(3, 1, removaln)
+            
             # repairSolution = self.destroyAndRepair(1, 1, removaln)
             # repairSolution = self.destroyAndRepair(2, 1, removaln)
             # repairSolution = self.destroyAndRepair(3, 1, removaln)
             # repairSolution = self.destroyAndRepair(chooseDestroy, 1, removaln)
             self.ifAccept(repairSolution, cnt, chooseDestroy, 1)
 
-            if cnt < totalIter * 0.2:
+            if cnt < totalIter * 0.25:
                 self.executeFleetMin(cnt)
         
         endtime = time.time()
         cpuTimeIteration = round(endtime - starttime, 3)
         self.currentSolution.checkFeasibility()
             # print("Pass Feasibility Check!")
-        print(self.currentSolution)
+        # print(self.currentSolution)
         print(f"Iteration Time: {cpuTimeIteration}")
+        self.CPUTime = cpuTimeIteration
     
     def constructInitialSolution(self):
         """Construct the initial solution
@@ -96,7 +98,8 @@ class ALNS:
         Args:
             iterNum (int, optional): Current Iteration Number. Defaults to 0.
         """
-        self.tempSolution = copy.deepcopy(self.currentSolution)
+        # self.tempSolution = copy.deepcopy(self.currentSolution)
+        self.tempSolution = self.currentSolution.copy()
         destroySolution = Destroy(self.instance, self.tempSolution)
         destroySolution.executeEntireRouteRemoval(self.randomGen)
         originalFleetSize = len(destroySolution.solution.routes)
@@ -128,17 +131,18 @@ class ALNS:
             destroySolution.executeStringRemoval(self.avgCusRmved, self.maxStringLen, self.randomGen)
         elif destroyOptNo == 3:
             destroySolution.executeSplitStringRemoval(self.avgCusRmved, self.maxStringLen, self.randomGen)
+            # strangly, this seems not that ... efficient ... ?? 
         
         tempSolution2 = destroySolution.solution.copy() # This is very important! 
         repairSolution = Repair(self.instance, tempSolution2)
         
         if repairOptNo == 1:
             repairSolution.executeMultiGreedyInsertion(self.randomGen)
-        
+
         return repairSolution
     
     
-    def ifAccept(self, repairSolution, iterNum = 0,  chooseDestroy = 0, chooseRepair = 0):
+    def ifAccept(self, repairSolution, iterNum = 0, chooseDestroy = 0, chooseRepair = 0):
         """check if this repaired solution should be accepted
 
         Args:
@@ -149,5 +153,18 @@ class ALNS:
             if len(repairSolution.solution.routes) > len(self.currentSolution.routes):
                 return
             self.currentSolution = repairSolution.solution
-            print(f"Found!! Obj: {repairSolution.solution.distance}, IterNum : {iterNum} , trucks: {len(repairSolution.solution.routes)} complete! Des: {chooseDestroy}, Rep: {chooseRepair}")
+            print(f"Found!! Obj: {repairSolution.solution.distance}, IterNum : {iterNum} , trucks: {len(repairSolution.solution.routes)}, DesOpt: {chooseDestroy}, RepOpt: {chooseRepair},", end = " ")
             
+            if self.instance.withBKS:
+                print(f"Gap to BKS : { round((repairSolution.solution.distance - self.instance.BKSDistance) * 100 / self.instance.BKSDistance, 2)}%, BKS Trucks {self.instance.BKSTrucks}")
+            else:
+                print("")
+                
+    
+    def returnBrief(self):
+        """Reture Brief to mian function 
+        """
+        if self.instance.withBKS:
+            return [self.currentSolution.distance, len(self.currentSolution.routes), self.CPUTime, round((self.currentSolution.distance - self.instance.BKSDistance) * 100 / self.instance.BKSDistance, 3),  self.instance.BKSTrucks]
+        else:
+            return [self.currentSolution.distance, len(self.currentSolution.routes), self.CPUTime]

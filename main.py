@@ -1,20 +1,47 @@
 from instance import Instance
 from alns import ALNS
 from visualizer import Visualizer
+import os
+from datetime import datetime
+
+def get_timestamped_filename(prefix="results", extension=".md"):
+    """
+    Generate a time-stampled filename
+    """
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")  # 获取当前时间
+    return f"{prefix}_{timestamp}{extension}"
 
 if __name__ == "__main__":
-    # 跑通一个case的
-    folder = "./benchmark/Gehring&Homberge/"
-    instList = ["RC2_6_1.txt"]
+    # folder = "./benchmark/Gehring&Homberge/"
+    # instList = ["RC2_6_1.txt"]
+    # category = "Gehring&Homberge"
+    
     # test list : C2_6_3.txt (checked)
-    # folder = "./benchmark/Solomon/"
-    # instList = ["rc101.txt"] 
+    folder = "./benchmark/Solomon/"
+    instList = ["rc101.txt", "rc102.txt"] 
+    category = "Solomon"
+    
     # hard case: rc101,
+    os.makedirs("./Logger", exist_ok=True)
+
+    file_path = os.path.join("./Logger", get_timestamped_filename())
+    file_exists = os.path.exists(file_path)
+
     for inst in instList:
         fileName = folder + inst
         curInstance = Instance.readInstance(fileName)
+        curInstance.updateBKS(category, inst.split(".")[0] ) # Update Best Known Solution ... 
         alns_solver = ALNS(curInstance)
         alns_solver.execute()
+        tempResult = alns_solver.returnBrief()
+        
+        with open(file_path, "a") as file:
+            if not file_exists:
+                file.write("| Obj     | #.Truck | CPU (s) | Gap to BKS | BKS #. Trucks |\n")
+                file.write("| :------ | :-----: | :-----: | :--------: | :-----------: |\n")
+                file_exists = True
+            file.write(f"| {round(tempResult[0],2)} | {tempResult[1]} | {round(tempResult[2],2)} | {round(tempResult[3],2)} | {tempResult[4]} |\n")
+
         # vrptw_visualizer = Visualizer(curInstance, alns_solver.bestSolution)
         # vrptw_visualizer.show()
         

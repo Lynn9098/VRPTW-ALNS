@@ -1,4 +1,3 @@
-
 class Parameters:
     randomSeed = 1
     avgCusRmved = 15  # bar c in 2020 T.S. Paper, indicate the avg number of customers removed
