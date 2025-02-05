@@ -56,7 +56,7 @@ class Route:
             curTime += self.instance.distMatrix[preID][postID]
             if curTime > self.nodes[i].dueTime:
                 # check timewindow
-                print(f"FAIL: Cus {self.nodes[i].id} Break time window!!, {len(self.nodes)}")
+                print(f"FAIL: Cus {self.nodes[i].id} Break time window!!, {len(self.nodes)}, display it:")
                 for node in self.nodes:
                     print(node)
                 return False
@@ -102,14 +102,6 @@ class Route:
             print("FAIL! Trying to remove a non-exist customer!")
             return
         
-        # if customer not in self.nodes:
-        #     print(f"Customer : {str(customer)}")
-        #     for node in self.nodes:
-        #         print(node)
-        #     print("===")
-        #     for node in self.nodesSet:
-        #         print(node)
-        
         del_cus_idx = self.nodes.index(customer)
         prevNode = self.nodes[del_cus_idx - 1]
         succNode = self.nodes[del_cus_idx + 1]
@@ -126,6 +118,15 @@ class Route:
             self.waitingTime[j] = max(0, currNode.readyTime - curArrivalTime)
         self.forgePushForward()
     
+    def removeCustomerByIndex(self, rmvdIdxes):
+        for index in rmvdIdxes[::-1]:
+            self.nodesSet.remove(self.nodes[index])
+            self.nodes.pop(index)
+            # delete by index 
+        self.distance = self.computeDistance()
+        self.calculateTime()
+        self.forgePushForward()
+        
     
     def greedyInsert(self, customer):
         """Greedily insert the customer into this route .. 

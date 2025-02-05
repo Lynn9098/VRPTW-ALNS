@@ -1,5 +1,6 @@
 from node import Node
 import numpy as np
+import pandas as pd
 
 class Instance:
     """_summary_
@@ -24,6 +25,7 @@ class Instance:
         # save all nodes 
         self.allNodes = [depot] + customers
         self.numNodes = len(self.allNodes) 
+        self.withBKS = False # Indicate no Best Known Solution found ... 
         # compute distance matrix
         for i in range(self.numNodes):
             for j in range(self.numNodes):
@@ -31,6 +33,26 @@ class Instance:
                     continue
                 else:
                     self.distMatrix[i][j] = Node.getDistance(self.allNodes[i], self.allNodes[j])
+        self.adjDistMatrix = np.argsort(self.distMatrix, axis=1).tolist() # matrix for string removal
+
+    def updateBKS(self, category, instID):
+        """Update Best Known Solutions (if any...)
+
+        Args:
+            category (_str_): the category of dataset, like "Solomon" or "Gehring&Homberge"
+            instID (_str_): the instance ID of dataset, like "c101" or "C2_2_4"
+        """
+        filePath = "./SOTA/" + category + ".csv"
+        try:
+            df = pd.read_csv(filePath)
+            best_solution = df[df["Instance"] == instID]
+            if not best_solution.empty:
+                self.withBKS = True
+                self.BKSTrucks = int(best_solution.iloc[0]["Vehicles"])
+                self.BKSDistance = round(float(best_solution.iloc[0]["Distance"]), 2)
+                print(self.BKSTrucks, self.BKSDistance)
+        except Exception:
+            print(f"Fatal: Fail to load Best Known Solution! {category}, {instID} is not found!")
     
     def readInstance(fileName):
         with open(fileName, 'r') as f:
@@ -75,10 +97,6 @@ class Instance:
                     i += 1
             else:
                 i += 1
-        
-        # Test output...
-        # for cus in customers[:5]:
-        #     print(cus)
 
         return Instance(fileName, numVehicle, capacity, depot, customers)
         
@@ -87,14 +105,8 @@ class Instance:
 if __name__ == "__main__":
     # only for test ... 
     folder = "./benchmark/Solomon/"
-    instList = ["c101.txt"]
-    for inst in instList:
-        fileName = folder + inst
-        Instance.readInstance(fileName)
-    # import operator
-    # a = [1,2,3,4,4,3,2,1]
-    # min_index, min_value = min(enumerate(a), key=operator.itemgetter(1))
-    # # print(min_index, min_value)
-    # print(a)
-    
-    
+    inst = "rc101.txt"
+    category = "Solomon"
+    fileName = folder + inst
+    curInstance = Instance.readInstance(fileName)
+    curInstance.updateBKS(category, inst.split(".")[0] ) # Update Best Known Solution ... 
