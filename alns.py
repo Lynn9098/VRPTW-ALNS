@@ -18,6 +18,7 @@ class ALNS:
     """
 
     def __init__(self, instance):
+        
         self.instance = instance
         self.randomGen = random.Random(Parameters.randomSeed) # for reproducibility
         self.avgCusRmved = Parameters.avgCusRmved
@@ -32,7 +33,7 @@ class ALNS:
         print(f"Terminated! CPU times {cpuTime} seconds, cost : {self.currentSolution.distance}")
 
         self.tempSolution = copy.deepcopy(self.currentSolution)
-        totalIter = 15000
+        totalIter = 20000
         
         starttime = time.time()
         for cnt in range(totalIter):
@@ -45,10 +46,10 @@ class ALNS:
             # print(f"Iter {cnt}, destroy method:  {chooseDestroy}")
             if chooseDestroy <= 3:
                 repairSolution = self.destroyAndRepair(1, 1, removaln)
-            elif chooseDestroy <= 6:
-                repairSolution = self.destroyAndRepair(2, 1, removaln)
+            # elif chooseDestroy <= 5:
+            #     repairSolution = self.destroyAndRepair(2, 1, removaln)
             else:
-                repairSolution = self.destroyAndRepair(3, 1, removaln)
+                repairSolution = self.destroyAndRepair(2, 1, removaln)
             
             # repairSolution = self.destroyAndRepair(1, 1, removaln)
             # repairSolution = self.destroyAndRepair(2, 1, removaln)
@@ -56,7 +57,7 @@ class ALNS:
             # repairSolution = self.destroyAndRepair(chooseDestroy, 1, removaln)
             self.ifAccept(repairSolution, cnt, chooseDestroy, 1)
 
-            if cnt < totalIter * 0.25:
+            if cnt < totalIter * 0.2:
                 self.executeFleetMin(cnt)
         
         endtime = time.time()
@@ -149,7 +150,7 @@ class ALNS:
             repairSolution (Class Repair): the repaired solution.
             iterNum (int, optional): iteration number. Defaults to 0.
         """
-        if self.currentSolution.distance - repairSolution.solution.distance >= 1e-3:
+        if self.currentSolution.distance - repairSolution.solution.distance >= 1e-3 or len(self.currentSolution.routes) > len(repairSolution.solution.routes):
             if len(repairSolution.solution.routes) > len(self.currentSolution.routes):
                 return
             self.currentSolution = repairSolution.solution
@@ -168,3 +169,30 @@ class ALNS:
             return [self.currentSolution.distance, len(self.currentSolution.routes), self.CPUTime, round((self.currentSolution.distance - self.instance.BKSDistance) * 100 / self.instance.BKSDistance, 3),  self.instance.BKSTrucks]
         else:
             return [self.currentSolution.distance, len(self.currentSolution.routes), self.CPUTime]
+
+if __name__ == "__main__":
+    import os
+    from datetime import datetime
+
+    def get_timestamped_filename(prefix="results", extension=".md"):
+        """
+        Generate a time-stampled filename
+        """
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")  # 获取当前时间
+        return f"{prefix}_{timestamp}{extension}"
+
+    folder = "./benchmark/Solomon/"
+    category = "Solomon"
+    
+    # os.makedirs("./Logger", exist_ok=True)
+
+    # file_path = os.path.join("./Logger", get_timestamped_filename())
+    # file_exists = os.path.exists(file_path)
+
+    # for inst in instList[1:]:
+    for inst in ['r205.txt']:
+        fileName = folder + inst
+        curInstance = Instance.readInstance(fileName)
+        curInstance.updateBKS(category, inst.split(".")[0] ) # Update Best Known Solution ... 
+        alns_solver = ALNS(curInstance)
+        print(alns_solver.randomGen.seed)
