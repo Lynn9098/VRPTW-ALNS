@@ -9,6 +9,8 @@ We provide a brief report of the numerical experiments. The results are obtained
 
 We may test our algorithm on more benchmarks in the future. As it's coded in pure Python, performance (running time) is somewhat terrible. We will try to fix that later.
 
+Total iteration Num is 20,000.
+
 |   Inst   |         Obj |  #.T  |  CPU (s)   | Gap BKS(%) | BKS #.T  | Note(#.T) |
 | :------: | ----------: | :---: | :--------: | ---------: | :------: | :-------: |
 |   c101   |      854.35 |  10   |   120.46   |       3.06 |    10    |     -     |
@@ -97,8 +99,8 @@ This repo incorporates some but not all features of SISRs and ALNS. We list them
    2. Naive Construction: each customer with a route. ✅
    3. Clark & Wright Saving Heuristic, 1964. ✅
 3. Fleet Minimization approach: currently just randomly remove an entire route from the solution and try to recreate a brand new solution. This is executed on first 20% iteration. This is proved to be a little bit helpful yet still much room to improve. 
-4. Simulated Annealing is **NOT** implemented yet.
-5. Adaptive Weight Adjustment, which is commonly used in ALNS, is **NOT** implemented yet.
+4. Simulated Annealing has **NOT** been implemented yet.
+5. Adaptive Weight Adjustment, which is commonly used in ALNS, has **NOT** been implemented yet.
 6. Some SOTA heuristic like [PyVRP package](https://pyvrp.readthedocs.io/en/latest/) are provided. You just need to call it.
 7. The split string removal, though implemented, seems not very powerful. We believe some bugs may hide, or some params are not correctly set.
 
