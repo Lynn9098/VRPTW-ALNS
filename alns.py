@@ -33,39 +33,39 @@ class ALNS:
         print(f"Terminated! CPU times {cpuTime} seconds, cost : {self.currentSolution.distance}")
 
         self.tempSolution = copy.deepcopy(self.currentSolution)
-        totalIter = 20000
+        totalIter = 5000
         
         starttime = time.time()
+        cnt_time = [0, 0, 0]
+        cnt_usage = [0, 0, 0]
         for cnt in range(totalIter):
-        
             removaln = self.randomGen.randint(1, int(0.1 * self.instance.numNodes - 1))
-            if cnt == 0:
-                chooseDestroy = self.randomGen.randint(1, 8)
-            else:
-                chooseDestroy = self.randomGen.randint(1, 8)
-            # print(f"Iter {cnt}, destroy method:  {chooseDestroy}")
+            chooseDestroy = self.randomGen.randint(1, 9)
+            finalDestroy = -1
             if chooseDestroy <= 3:
-                repairSolution = self.destroyAndRepair(1, 1, removaln)
-            # elif chooseDestroy <= 5:
-            #     repairSolution = self.destroyAndRepair(2, 1, removaln)
+                finalDestroy = 1
+            elif chooseDestroy <= 6:
+                finalDestroy = 2
             else:
-                repairSolution = self.destroyAndRepair(2, 1, removaln)
+                finalDestroy = 3
+            curDTime1 = time.time()
+            repairSolution = self.destroyAndRepair(finalDestroy, 1, removaln)
+            curDTime2 = time.time()
+            cnt_time[finalDestroy - 1] += round(curDTime2 - curDTime1, 3)
+            cnt_usage[finalDestroy - 1] += 1
             
-            # repairSolution = self.destroyAndRepair(1, 1, removaln)
-            # repairSolution = self.destroyAndRepair(2, 1, removaln)
-            # repairSolution = self.destroyAndRepair(3, 1, removaln)
-            # repairSolution = self.destroyAndRepair(chooseDestroy, 1, removaln)
-            self.ifAccept(repairSolution, cnt, chooseDestroy, 1)
+            self.ifAccept(repairSolution, cnt, finalDestroy, 1)
 
-            if cnt < totalIter * 0.2:
+            if cnt < totalIter * 0.8:
                 self.executeFleetMin(cnt)
         
         endtime = time.time()
         cpuTimeIteration = round(endtime - starttime, 3)
         self.currentSolution.checkFeasibility()
-            # print("Pass Feasibility Check!")
-        # print(self.currentSolution)
+        
         print(f"Iteration Time: {cpuTimeIteration}")
+        print(f"Destroy Running Time : {cnt_time}")
+        print(f"Destroy Count Usage : {cnt_usage}")
         self.CPUTime = cpuTimeIteration
     
     def constructInitialSolution(self):
@@ -161,7 +161,7 @@ class ALNS:
             else:
                 print("")
                 
-    
+
     def returnBrief(self):
         """Reture Brief to mian function 
         """
@@ -185,14 +185,12 @@ if __name__ == "__main__":
     category = "Solomon"
     
     # os.makedirs("./Logger", exist_ok=True)
-
     # file_path = os.path.join("./Logger", get_timestamped_filename())
     # file_exists = os.path.exists(file_path)
-
     # for inst in instList[1:]:
+    
     for inst in ['r205.txt']:
         fileName = folder + inst
         curInstance = Instance.readInstance(fileName)
         curInstance.updateBKS(category, inst.split(".")[0] ) # Update Best Known Solution ... 
         alns_solver = ALNS(curInstance)
-        print(alns_solver.randomGen.seed)

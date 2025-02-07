@@ -145,14 +145,12 @@ class Solution:
             if len(routeList) > 2:
                 self.routes.append(Route(self.instance, routeList, set(routeList)))
                 self.distance += self.routes[-1].distance
-    
+
     
     def removeCustomer(self, customer):
         # remove customer from Solution ... 
-        # executed = False
         for i in range(len(self.routes)):
             if customer in self.routes[i].nodesSet:
-                # print(f"Remove customer {customer.id}")
                 # executed = True
                 if len(self.routes[i].nodes) == 3:
                     self.routes.remove(self.routes[i])
@@ -162,7 +160,6 @@ class Solution:
                 # print(f"length of nodes before: {len(self.routes[i].nodes)}")
                 self.routes[i].removeCustomer(customer)
                 # self.routes[i].forgePushForward()
-                # print(f"length of nodes after: {len(self.routes[i].nodes)}")
                 break
             
         
@@ -190,17 +187,9 @@ class Solution:
         #     print(f"Removed: {self.routes[routeIdx].nodes[index].id}", end = ",")
         # print("")
         
-        # if rmvdLen == len(self.routes[routeIdx].nodes) - 2:
-        #     self.routes.pop(routeIdx)
-        #     self.distance -= prevDist
-        # else:
         self.routes[routeIdx].removeCustomerByIndex(rmvdIdxes)
         self.distance += (self.routes[routeIdx].distance - prevDist)
-        
-        # print("Removed: ")
-        # for node in self.routes[routeIdx].nodes:
-        #     print(node)
-        # print(len(self.routes[routeIdx].nodesSet))
+
     
     def keepRouteString(self, routeIdx, keptIdxes):
         """Remove customers except those index in keptIdxes

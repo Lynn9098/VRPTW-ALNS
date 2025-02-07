@@ -1,13 +1,13 @@
 # VRPTW-ALNS
 
-This repo provides a ALNS meta-heuristic to solve VRPTW (Vehicle Routing Problem with Time Windows), which is NP-hard. We implement the SISRs (Slack Induction by String Removals) technique in `Jan Christiaens, Greet Vanden Berghe (2020) Slack Induction by String Removals for Vehicle Routing Problems. Transportation Science`, **which is proved to be a simple yet powerful heuristic for variants of VRP**. Experiments results can be found below.
+This repo provides a ALNS meta-heuristic to solve VRPTW (Vehicle Routing Problem with Time Windows), which is NP-hard. We implement the SISRs (Slack Induction by String Removals) technique in `Jan Christiaens, Greet Vanden Berghe (2020) Slack Induction by String Removals for Vehicle Routing Problems. Transportation Science`, **which is proved to be a simple yet powerful heuristic for variants of VRP**. Experiments analysis can be found below.
 
 
 ## Numerical Experiments 
 
 We provide a brief report of the numerical experiments. The results are obtained by running our code on Solomon benchmark instances. Column `Obj` indicates the objective value of our algorithm (which is measured by total distance), `#.T` shows the number of vehicles used in our solution, `CPU(s)` denotes the CPU time in seconds, `Gap BKS(%)` is the gap to the Best-Known Solution (BKS), `BKS #.T` is the number of vehicles used in the BKS, and `Note(#.T)` is the note, mainly the increase of vehicles compared with BKS. 
 
-We may test our algorithm on more benchmarks in the future. As it's coded in pure Python, performance (running time) is somewhat terrible. We will try to fix that later.
+We may test our algorithm on more benchmarks in the future. As it's coded in pure Python, performance (running time) is somewhat terrible. We will try to fix that later. Analysis on running time verified a great time waste in destroy operators, with 0.07 s per action, even including the random removal operator. 
 
 Total iteration Num is 20,000.
 
@@ -98,9 +98,7 @@ This repo incorporates some but not all features of SISRs and ALNS. We list them
    1. Solomon's Time-oriented Nearest Neighbor, in 1987 ✅
    2. Naive Construction: each customer with a route. ✅
    3. Clark & Wright Saving Heuristic, 1964. ✅
-3. Fleet Minimization approach: currently just randomly remove an entire route from the solution and try to recreate a brand new solution. This is executed on first 20% iteration. This is proved to be a little bit helpful yet still much room to improve. 
+3. Fleet Minimization approach: currently just randomly remove an entire route from the solution and try to recreate a brand new solution. This is proved to be a little bit helpful yet still much room to improve. 
 4. Simulated Annealing has **NOT** been implemented yet.
 5. Adaptive Weight Adjustment, which is commonly used in ALNS, has **NOT** been implemented yet.
 6. Some SOTA heuristic like [PyVRP package](https://pyvrp.readthedocs.io/en/latest/) are provided. You just need to call it.
-7. The split string removal, though implemented, seems not very powerful. We believe some bugs may hide, or some params are not correctly set.
-

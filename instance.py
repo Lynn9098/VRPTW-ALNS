@@ -98,6 +98,7 @@ class Instance:
             else:
                 i += 1
 
+        print(f"Complete Read Instance : {fileName}")
         return Instance(fileName, numVehicle, capacity, depot, customers)
         
     
