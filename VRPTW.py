@@ -4,7 +4,7 @@ import math
 import time
 import os
 import pandas as pd
-
+# FIXME: Previous version. May delete when necessary.
 class Customer:
     def __init__(self, idx, demand, ready_time, due_time, service_time, x, y):
         self.idx = idx

@@ -27,13 +27,16 @@ if __name__ == "__main__":
     # folder = "./benchmark/Solomon/"
     # instList = get_all_instances(folder)
     # category = "Solomon"
+    instList.sort()
+    # print(instList)
     
     os.makedirs("./Logger", exist_ok=True)
     file_path = os.path.join("./Logger", get_timestamped_filename())
     file_exists = os.path.exists(file_path)
+    # print(instList[10:20] + instList[60:70] + instList[110:120] + instList[160:170] + instList[210:220] )
 
-
-    for inst in [ "C1_2_3.TXT"]:
+    for inst in instList[10:20] + instList[60:70] + instList[110:120] + instList[160:170] + instList[210:220] :
+        # 200 customer instances ... 
         fileName = folder + inst
         curInstance = Instance.readInstance(fileName)
         curInstance.updateBKS(category, inst.split(".")[0] ) # Update Best Known Solution ... 

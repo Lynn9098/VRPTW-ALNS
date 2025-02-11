@@ -33,8 +33,8 @@ class ALNS:
         print(f"Terminated! CPU times {cpuTime} seconds, cost : {self.currentSolution.distance}")
 
         self.tempSolution = copy.deepcopy(self.currentSolution)
-        totalIter = 5000
-        
+        totalIter = 20000
+
         starttime = time.time()
         cnt_time = [0, 0, 0]
         cnt_usage = [0, 0, 0]
@@ -44,7 +44,7 @@ class ALNS:
             finalDestroy = -1
             if chooseDestroy <= 3:
                 finalDestroy = 1
-            elif chooseDestroy <= 6:
+            elif chooseDestroy <= 7:
                 finalDestroy = 2
             else:
                 finalDestroy = 3
@@ -56,7 +56,7 @@ class ALNS:
             
             self.ifAccept(repairSolution, cnt, finalDestroy, 1)
 
-            if cnt < totalIter * 0.8:
+            if cnt < totalIter * 0.2:
                 self.executeFleetMin(cnt)
         
         endtime = time.time()
