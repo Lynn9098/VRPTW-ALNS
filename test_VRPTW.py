@@ -5,7 +5,7 @@ import time
 import os
 import pandas as pd
 # NOTE: Temperal file, to avoid git conflict and protect file
-# TODO: Delete it when completed.
+# FIXME: Delete this file when necessary.
 class Customer:
     def __init__(self, idx, demand, ready_time, due_time, service_time, x, y):
         self.idx = idx
