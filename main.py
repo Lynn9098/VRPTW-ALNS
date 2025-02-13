@@ -19,7 +19,7 @@ def get_timestamped_filename(prefix="results", extension=".md"):
     return f"{prefix}_{timestamp}{extension}"
 
 if __name__ == "__main__":
-    folder = "./benchmark/Gehring&Homberge/"
+    folder = "./VRPTW-ALNS/benchmark/Gehring&Homberge/"
     instList = get_all_instances(folder)
     category = "Gehring&Homberge"
     
